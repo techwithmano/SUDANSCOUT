@@ -60,6 +60,7 @@ export default {
     officeCustodian: 'Custodian Office',
     officeCommunityService: 'Community Service & Development Office',
     // Leader roles
+    roleChairman: 'Chairman of the Board',
     roleHeadScoutmaster: 'Head Scoutmaster',
     roleAssistantHeadScoutmaster: 'Assistant Head Scoutmaster',
     roleFirstHonoraryLeader: 'First Honorary Leader',
@@ -217,3 +218,5 @@ export default {
     editProfile: 'Edit Profile',
   }
 };
+
+    

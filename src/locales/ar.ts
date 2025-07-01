@@ -60,6 +60,7 @@ export default {
     officeCustodian: 'مكتب أمين العهدة',
     officeCommunityService: 'مكتب الخدمة وتنمية المجتمع',
     // Leader roles
+    roleChairman: 'رئيس مجلس الإدارة',
     roleHeadScoutmaster: 'القائد العام',
     roleAssistantHeadScoutmaster: 'مساعد القائد العام',
     roleFirstHonoraryLeader: 'القائد الشرفي الأول',
@@ -187,7 +188,7 @@ export default {
     loginErrorTitle: 'فشل تسجيل الدخول',
     loginErrorDescription: 'بيانات الاعتماد غير صالحة. الرجاء المحاولة مرة أخرى.',
     adminMenu: 'قائمة المسؤول',
-    manageProducts: 'إدارة المنتجات',
+    manageProducts: 'إدارة المنتخولات',
     logout: 'تسجيل الخروج',
     productsTitle: 'إدارة المنتخولات',
     productsSubtitle: 'أضف، عدّل، أو أزل المنتجات من المتجر.',
@@ -217,3 +218,5 @@ export default {
     editProfile: 'تعديل الملف الشخصي',
   }
 };
+
+    

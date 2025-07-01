@@ -21,6 +21,12 @@ const offices = [
 const leadership = {
   command: [
     {
+      name: 'مهدي ميرغني ليلي',
+      role: 'roleChairman',
+      imageUrl: 'https://placehold.co/400x400.png',
+      dataAiHint: 'portrait man formal',
+    },
+    {
       name: 'محمد يحيى',
       role: 'roleFirstHonoraryLeader',
       imageUrl: 'https://placehold.co/400x400.png',
@@ -281,3 +287,5 @@ export default function AboutPage() {
     </div>
   );
 }
+
+    
