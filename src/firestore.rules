@@ -1,0 +1,36 @@
+
+rules_version = '2';
+
+// In these rules, `request.auth` is an object that contains the
+// authentication information of the user making the request.
+// `request.auth.token.email` is the email of the authenticated user.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if the user is the authenticated admin
+    function isAdmin() {
+      // IMPORTANT: Replace this with your actual admin email address.
+      // This is the email you use to log into the admin section of your app.
+      return request.auth.token.email == 'sudanscoutadmin@scout.com';
+    }
+
+    // Products can be read by anyone, but only created, updated, or deleted by an admin.
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin(); // Covers create, update, delete
+    }
+
+    // Scouts can be read by anyone (for individual profile lookups),
+    // but only created, updated, or deleted by an admin.
+    match /scouts/{scoutId} {
+      allow get: if true; // 'get' allows reading a single document
+      allow list: if isAdmin(); // 'list' allows querying multiple documents. Only admin can see the full list.
+      allow write: if isAdmin(); // Covers create, update, delete
+    }
+    
+    // Fallback rule: Deny all other access to any other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

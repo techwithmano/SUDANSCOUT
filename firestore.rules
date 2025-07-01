@@ -1,0 +1,23 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check for admin user
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'sudanscoutadmin@scout.com';
+    }
+
+    // Scouts can be read by anyone, but only written by admins.
+    match /scouts/{scoutId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Products can be read by anyone, but only written by admins.
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
