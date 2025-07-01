@@ -12,14 +12,16 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Loader2, PlusCircle, Trash2, ShieldQuestion } from "lucide-react";
+import { CalendarIcon, Loader2, PlusCircle, Trash2, ShieldQuestion, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Separator } from "../ui/separator";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
-import { db, auth } from "@/lib/firebase";
+import { db, auth, storage } from "@/lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import Image from "next/image";
 
 type ScoutFormValues = z.infer<typeof scoutSchema>;
 
@@ -33,6 +35,8 @@ const ADMIN_EMAIL = 'sudanscoutadmin@scout.com';
 export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(scout?.imageUrl || null);
   const isEditMode = !!scout;
 
   const form = useForm<ScoutFormValues>({
@@ -54,6 +58,7 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
         ...scout,
         dateOfBirth: scout.dateOfBirth ? new Date(scout.dateOfBirth).toISOString() : "",
       });
+      setImagePreview(scout.imageUrl);
     } else {
       form.reset({
         id: "",
@@ -64,6 +69,7 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
         imageUrl: "https://placehold.co/400x400.png",
         payments: [],
       });
+      setImagePreview(null);
     }
   }, [scout, form]);
 
@@ -71,6 +77,15 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
     control: form.control,
     name: "payments",
   });
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+    }
+  };
 
   const onSubmit = async (data: ScoutFormValues) => {
     setIsSubmitting(true);
@@ -81,13 +96,27 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
       return;
     }
     
-    const { id, ...scoutData } = data;
-    
     try {
+      let finalImageUrl = scout?.imageUrl || "https://placehold.co/400x400.png";
+
+      // If a new image was selected, upload it to Firebase Storage
+      if (imageFile) {
+        const storageRef = ref(storage, `scout-images/${data.id || Date.now()}-${imageFile.name}`);
+        const uploadResult = await uploadBytes(storageRef, imageFile);
+        finalImageUrl = await getDownloadURL(uploadResult.ref);
+      }
+      
+      const scoutData = {
+        ...data,
+        imageUrl: finalImageUrl,
+      };
+
+      const { id, ...savableData } = scoutData;
+      
       if (isEditMode && scout) {
         // Update existing scout
         const scoutRef = doc(db, 'scouts', scout.id);
-        await updateDoc(scoutRef, scoutData);
+        await updateDoc(scoutRef, savableData);
         toast({ title: "Success!", description: "Member profile has been updated." });
       } else {
         // Create new scout
@@ -98,7 +127,7 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
             setIsSubmitting(false);
             return;
         }
-        await setDoc(scoutRef, scoutData);
+        await setDoc(scoutRef, savableData);
         toast({ title: "Success!", description: "New member has been created." });
       }
       if (onSaveSuccess) {
@@ -153,7 +182,14 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
           )} />
           <FormField control={form.control} name="address" render={({ field }) => (<FormItem><FormLabel>Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
           <FormField control={form.control} name="group" render={({ field }) => (<FormItem><FormLabel>Group</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-          <FormField control={form.control} name="imageUrl" render={({ field }) => (<FormItem className="md:col-span-2"><FormLabel>Image URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+          
+          <div className="md:col-span-2 space-y-2">
+            <FormLabel htmlFor="picture">Profile Picture</FormLabel>
+            <div className="flex items-center gap-4">
+              {imagePreview && <Image src={imagePreview} alt="Profile preview" width={80} height={80} className="rounded-full object-cover aspect-square" />}
+              <Input id="picture" type="file" accept="image/png, image/jpeg, image/gif" onChange={handleImageChange} className="flex-1" />
+            </div>
+          </div>
         </div>
         
         <Separator />
