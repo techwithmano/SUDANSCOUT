@@ -54,18 +54,35 @@ export function CheckoutForm() {
         return `- ${item.quantity}x ${productName}${sizeInfo}`;
     }).join('\n');
 
-    let messageBody = `*New Order from Scout Central Website:*\n\n`;
-    messageBody += `*Customer Details:*\n`;
-    messageBody += `Name: ${data.firstName} ${data.lastName}\n`;
-    messageBody += `Address: ${data.address}\n`;
-    messageBody += `Phone: ${data.phone}\n`;
-    messageBody += `Email: ${data.email}\n`;
-    if (data.scoutId) {
-        messageBody += `Scout ID: ${data.scoutId}\n`;
+    let messageBody = '';
+
+    if (locale === 'ar') {
+        messageBody = `*طلب جديد من موقع كشافة السودان:*\n\n`;
+        messageBody += `*تفاصيل العميل:*\n`;
+        messageBody += `الاسم: ${data.firstName} ${data.lastName}\n`;
+        messageBody += `العنوان: ${data.address}\n`;
+        messageBody += `الهاتف: ${data.phone}\n`;
+        messageBody += `البريد الإلكتروني: ${data.email}\n`;
+        if (data.scoutId) {
+            messageBody += `معرف الكشاف: ${data.scoutId}\n`;
+        }
+        messageBody += `\n*ملخص الطلب:*\n`;
+        messageBody += `${itemsSummary}\n\n`;
+        messageBody += `*السعر الإجمالي: ${totalPrice.toFixed(3)} دينار كويتي*`;
+    } else {
+        messageBody = `*New Order from Scout Central Website:*\n\n`;
+        messageBody += `*Customer Details:*\n`;
+        messageBody += `Name: ${data.firstName} ${data.lastName}\n`;
+        messageBody += `Address: ${data.address}\n`;
+        messageBody += `Phone: ${data.phone}\n`;
+        messageBody += `Email: ${data.email}\n`;
+        if (data.scoutId) {
+            messageBody += `Scout ID: ${data.scoutId}\n`;
+        }
+        messageBody += `\n*Order Summary:*\n`;
+        messageBody += `${itemsSummary}\n\n`;
+        messageBody += `*Total Price: ${totalPrice.toFixed(3)} KWD*`;
     }
-    messageBody += `\n*Order Summary:*\n`;
-    messageBody += `${itemsSummary}\n\n`;
-    messageBody += `*Total Price: ${totalPrice.toFixed(3)} KWD*`;
 
     const url = `https://wa.me/${whatsAppNumber}?text=${encodeURIComponent(messageBody)}`;
 

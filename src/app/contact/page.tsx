@@ -25,7 +25,7 @@ const contactSchema = z.object({
 type ContactFormValues = z.infer<typeof contactSchema>;
 
 export default function ContactPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { toast } = useToast();
 
   const form = useForm<ContactFormValues>({
@@ -41,13 +41,25 @@ export default function ContactPage() {
   async function onSubmit(data: ContactFormValues) {
     const whatsAppNumber = "249963081890"; 
 
-    const messageBody = `New message from the Scout Central website:
+    let messageBody = '';
+
+    if (locale === 'ar') {
+        messageBody = `رسالة جديدة من موقع كشافة السودان:
+*الاسم:* ${data.name}
+*البريد الإلكتروني:* ${data.email}
+*الموضوع:* ${data.subject}
+
+*الرسالة:*
+${data.message}`;
+    } else {
+        messageBody = `New message from the Scout Central website:
 *Name:* ${data.name}
 *Email:* ${data.email}
 *Subject:* ${data.subject}
 
 *Message:*
 ${data.message}`;
+    }
     
     const url = `https://wa.me/${whatsAppNumber}?text=${encodeURIComponent(messageBody)}`;
 

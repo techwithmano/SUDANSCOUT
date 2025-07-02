@@ -10,23 +10,38 @@ import { CheckCircle2, CircleDollarSign } from "lucide-react";
 import { useTranslation } from "@/context/LanguageContext";
 
 export function PaymentSection({ scout }: { scout: Scout }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const currentPayments = scout.payments || [];
 
   const handlePayNow = (payment: Payment) => {
     const whatsAppNumber = "249963081890";
     
-    let messageBody = `*Scout Payment Notification*\n\n`;
-    messageBody += `*Member Details:*\n`;
-    messageBody += `- Name: ${scout.fullName}\n`;
-    messageBody += `- Scout ID: ${scout.id}\n`;
-    messageBody += `- Group: ${scout.group}\n`;
-    messageBody += `- Address: ${scout.address}\n\n`;
-    
-    messageBody += `*Payment Details:*\n`;
-    messageBody += `- Month: ${payment.month}\n`;
-    messageBody += `- Amount: ${(payment.amount || 0).toFixed(3)} KWD`;
+    let messageBody = '';
+
+    if (locale === 'ar') {
+        messageBody = `*إشعار دفع رسوم كشفية*\n\n`;
+        messageBody += `*تفاصيل العضو:*\n`;
+        messageBody += `- الاسم: ${scout.fullName}\n`;
+        messageBody += `- معرف الكشاف: ${scout.id}\n`;
+        messageBody += `- الفرقة: ${scout.group}\n`;
+        messageBody += `- العنوان: ${scout.address}\n\n`;
+        
+        messageBody += `*تفاصيل الدفع:*\n`;
+        messageBody += `- الشهر: ${payment.month}\n`;
+        messageBody += `- المبلغ: ${(payment.amount || 0).toFixed(3)} دينار كويتي`;
+    } else {
+        messageBody = `*Scout Payment Notification*\n\n`;
+        messageBody += `*Member Details:*\n`;
+        messageBody += `- Name: ${scout.fullName}\n`;
+        messageBody += `- Scout ID: ${scout.id}\n`;
+        messageBody += `- Group: ${scout.group}\n`;
+        messageBody += `- Address: ${scout.address}\n\n`;
+        
+        messageBody += `*Payment Details:*\n`;
+        messageBody += `- Month: ${payment.month}\n`;
+        messageBody += `- Amount: ${(payment.amount || 0).toFixed(3)} KWD`;
+    }
     
     const url = `https://wa.me/${whatsAppNumber}?text=${encodeURIComponent(messageBody)}`;
     
