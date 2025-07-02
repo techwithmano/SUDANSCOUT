@@ -39,8 +39,7 @@ export default function ContactPage() {
   });
 
   async function onSubmit(data: ContactFormValues) {
-    // IMPORTANT: Replace this with your actual WhatsApp number, including the country code without the '+'.
-    const whatsAppNumber = "96512345678"; 
+    const whatsAppNumber = "96565560890"; 
 
     const messageBody = `New message from the Scout Central website:
 *Name:* ${data.name}
