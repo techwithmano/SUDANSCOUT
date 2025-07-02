@@ -35,8 +35,14 @@ export default function MemberProfileView({ scout }: { scout: Scout }) {
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const targetLocale = locale === 'ar' ? 'ar-SA' : 'en-US';
-    return date.toLocaleDateString(targetLocale, { year: 'numeric', month: 'long', day: 'numeric' });
+    const targetLocale = locale === 'ar' ? 'ar-EG' : 'en-US';
+    const options: Intl.DateTimeFormatOptions = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        calendar: 'gregory' // Explicitly set Gregorian calendar
+    };
+    return date.toLocaleDateString(targetLocale, options);
   };
 
   return (
