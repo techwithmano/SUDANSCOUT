@@ -3,25 +3,16 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // PUBLIC: Products can be read by anyone.
-    // ADMIN: Products can only be created, updated, or deleted by an admin.
+    // Allow public read access to products, but only admins can write.
     match /products/{productId} {
       allow read: if true;
       allow write: if request.auth != null && request.auth.token.email == 'sudanscoutadmin@scout.com';
     }
 
-    // PUBLIC: Scout profiles can be read by anyone.
-    // ADMIN: Scouts can only be created, updated, or deleted by an admin.
+    // Allow public read access to scout profiles, but only admins can write.
     match /scouts/{scoutId} {
       allow read: if true;
       allow write: if request.auth != null && request.auth.token.email == 'sudanscoutadmin@scout.com';
-    }
-    
-    // PUBLIC: Anyone can create (submit) a contact message.
-    // ADMIN: Only admins can read, update, or delete contact messages.
-    match /contacts/{contactId} {
-      allow create: if true;
-      allow read, update, delete: if request.auth != null && request.auth.token.email == 'sudanscoutadmin@scout.com';
     }
   }
 }
