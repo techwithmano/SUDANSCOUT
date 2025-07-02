@@ -1,19 +1,21 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, ChangeEvent } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/context/LanguageContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, Users, UserPlus, Edit, Trash2 } from "lucide-react";
+import { Loader2, Users, UserPlus, Edit, Trash2, Download, Upload } from "lucide-react";
 import type { Scout } from "@/lib/data";
+import { scoutSchema } from "@/lib/data";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { collection, getDocs, query, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, query, deleteDoc, doc, writeBatch } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { MemberFormDialog } from "../admin/MemberFormDialog";
+import Papa from 'papaparse';
 
 const ADMIN_EMAIL = 'sudanscoutadmin@scout.com';
 
@@ -24,6 +26,8 @@ export default function AllMembersView() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingScout, setEditingScout] = useState<Scout | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const fetchScouts = async () => {
     setIsLoading(true);
@@ -60,7 +64,7 @@ export default function AllMembersView() {
   const handleDialogClose = (wasSaved: boolean) => {
     setIsDialogOpen(false);
     if (wasSaved) {
-      fetchScouts(); // Refresh the list if a change was made
+      fetchScouts();
     }
   }
 
@@ -73,7 +77,7 @@ export default function AllMembersView() {
     try {
         await deleteDoc(doc(db, 'scouts', scout.id));
         toast({ title: t('admin.updateSuccess'), description: t('admin.deleteSuccessDesc', { name: scout.fullName }) });
-        fetchScouts(); // Refetch the list
+        fetchScouts();
     } catch (error) {
         console.error("Firestore Delete Error:", error);
         const errorMessage = error instanceof Error ? error.message : t('admin.unknownError');
@@ -84,6 +88,94 @@ export default function AllMembersView() {
         });
     }
   };
+
+  const handleExportCSV = () => {
+    const dataToExport = scouts.map(scout => ({
+        ...scout,
+        payments: JSON.stringify(scout.payments || []),
+    }));
+    const csv = Papa.unparse(dataToExport);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'scouts_data.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    try {
+      const existingScoutsSnapshot = await getDocs(query(collection(db, 'scouts')));
+      const existingScoutIds = new Set(existingScoutsSnapshot.docs.map(docData => docData.id));
+
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async (results) => {
+          const batch = writeBatch(db);
+          let successCount = 0;
+          let skippedCount = 0;
+
+          for (const row of results.data as any[]) {
+            try {
+              const payments = row.payments ? JSON.parse(row.payments) : [];
+              const scoutData = { ...row, payments };
+              const validatedData = scoutSchema.parse(scoutData);
+              
+              if (existingScoutIds.has(validatedData.id)) {
+                skippedCount++;
+                continue;
+              }
+
+              const scoutRef = doc(db, 'scouts', validatedData.id);
+              const { id, ...savableData } = validatedData;
+              batch.set(scoutRef, savableData);
+              successCount++;
+            } catch (parseError) {
+              console.error('Skipping invalid row:', row, parseError);
+              skippedCount++;
+            }
+          }
+          
+          if(successCount > 0) {
+            await batch.commit();
+          }
+
+          toast({
+            title: t('admin.importSuccessTitle'),
+            description: t('admin.importSuccessDesc', { successCount: String(successCount), skippedCount: String(skippedCount) }),
+          });
+          
+          if(successCount > 0) {
+            fetchScouts();
+          }
+        },
+        error: (error: any) => { throw new Error(error.message); }
+      });
+    } catch (error) {
+      console.error("Import failed:", error);
+      toast({
+        variant: 'destructive',
+        title: t('admin.importErrorTitle'),
+        description: t('admin.importErrorDesc', { error: error instanceof Error ? error.message : String(error) }),
+      });
+    } finally {
+      setIsImporting(false);
+      if (event.target) event.target.value = '';
+    }
+  };
+
 
   const getInitials = (name: string) => {
     if (!name) return '??';
@@ -111,6 +203,14 @@ export default function AllMembersView() {
         onClose={handleDialogClose}
         scout={editingScout}
       />
+       <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept=".csv"
+        className="hidden"
+        aria-label={t('admin.selectCsv')}
+      />
       <div className="container mx-auto px-4 py-16">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-12 gap-4">
           <div className="text-center sm:text-left">
@@ -119,10 +219,14 @@ export default function AllMembersView() {
               </h1>
               <p className="mt-2 text-lg text-muted-foreground">{t('admin.allMembersSubtitle')}</p>
           </div>
-          <Button onClick={handleAddNew}>
-            <UserPlus className="mr-2 h-4 w-4" />
-            {t('admin.addNewMember')}
-          </Button>
+          <div className="flex flex-wrap justify-center sm:justify-end gap-2">
+            <Button onClick={handleImportClick} disabled={isImporting}>
+              {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+              {isImporting ? t('admin.importing') : t('admin.importData')}
+            </Button>
+            <Button onClick={handleExportCSV} variant="outline"><Download className="mr-2 h-4 w-4" /> {t('admin.exportData')}</Button>
+            <Button onClick={handleAddNew}><UserPlus className="mr-2 h-4 w-4" />{t('admin.addNewMember')}</Button>
+          </div>
         </div>
         <Card>
           <CardContent className="p-0">

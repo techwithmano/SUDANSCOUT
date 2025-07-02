@@ -274,5 +274,13 @@ export default {
     deletePermissionError: 'Permission Denied',
     deletePermissionErrorDesc: 'You are not authorized to perform this action.',
     unknownError: 'An unknown error occurred.',
+    exportData: 'Export Data',
+    importData: 'Import Data',
+    importing: 'Importing...',
+    importSuccessTitle: 'Import Complete',
+    importSuccessDesc: '{successCount} members imported successfully. {skippedCount} were skipped as they already exist.',
+    importErrorTitle: 'Import Failed',
+    importErrorDesc: 'The CSV file could not be parsed or uploaded. Please check the file format and try again. Error: {error}',
+    selectCsv: 'Select CSV file to import',
   }
 };

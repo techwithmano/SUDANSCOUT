@@ -39,7 +39,7 @@ export const scoutSchema = z.object({
   dateOfBirth: z.string().min(1, "Date of birth is required"),
   address: z.string().min(5, "Address is required"),
   group: z.string().min(1, "Group is required"),
-  imageUrl: z.string().url("A valid image URL is required"),
+  imageUrl: z.string().optional().transform(val => val && val.startsWith('http') ? val : 'https://placehold.co/400x400.png'),
   payments: z.array(paymentSchema).optional().default([]),
 });
 
