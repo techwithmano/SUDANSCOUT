@@ -84,7 +84,7 @@ export default function MemberProfileView({ scout }: { scout: Scout }) {
 
             <div className="mt-12">
                 <h2 className="text-2xl font-bold font-headline text-primary">{t('memberProfile.paymentStatus')}</h2>
-                <PaymentSection scoutId={scout.id} initialPayments={scout.payments} />
+                <PaymentSection scout={scout} />
             </div>
         </CardContent>
       </Card>

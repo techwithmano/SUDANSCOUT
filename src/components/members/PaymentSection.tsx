@@ -1,21 +1,37 @@
 
 "use client";
 
-import type { Payment } from "@/lib/data";
+import type { Payment, Scout } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, CircleDollarSign } from "lucide-react";
 import { useTranslation } from "@/context/LanguageContext";
-import Link from "next/link";
 
-export function PaymentSection({ scoutId, initialPayments }: { scoutId: string; initialPayments: Payment[] }) {
+export function PaymentSection({ scout }: { scout: Scout }) {
   const { t } = useTranslation();
 
-  // This component now gets its state from the parent via props (`initialPayments`), 
-  // which are updated by Next.js when revalidatePath is called.
-  const currentPayments = initialPayments || [];
+  const currentPayments = scout.payments || [];
+
+  const handlePayNow = (payment: Payment) => {
+    const whatsAppNumber = "249963081890";
+    
+    let messageBody = `*Scout Payment Notification*\n\n`;
+    messageBody += `*Member Details:*\n`;
+    messageBody += `- Name: ${scout.fullName}\n`;
+    messageBody += `- Scout ID: ${scout.id}\n`;
+    messageBody += `- Group: ${scout.group}\n`;
+    messageBody += `- Address: ${scout.address}\n\n`;
+    
+    messageBody += `*Payment Details:*\n`;
+    messageBody += `- Month: ${payment.month}\n`;
+    messageBody += `- Amount: ${(payment.amount || 0).toFixed(3)} KWD`;
+    
+    const url = `https://wa.me/${whatsAppNumber}?text=${encodeURIComponent(messageBody)}`;
+    
+    window.open(url, '_blank')?.focus();
+  };
 
   return (
     <div className="mt-4 border rounded-lg overflow-hidden">
@@ -51,11 +67,13 @@ export function PaymentSection({ scoutId, initialPayments }: { scoutId: string; 
               </TableCell>
               <TableCell className="text-right">
                 {payment.status === "due" ? (
-                  <Button asChild size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                    <Link href="https://your-payment-link.com" target="_blank">
-                      <CircleDollarSign className="mr-2 h-4 w-4" />
-                      {t('memberProfile.payNow')}
-                    </Link>
+                  <Button 
+                    size="sm" 
+                    className="bg-accent text-accent-foreground hover:bg-accent/90"
+                    onClick={() => handlePayNow(payment)}
+                  >
+                    <CircleDollarSign className="mr-2 h-4 w-4" />
+                    {t('memberProfile.payNow')}
                   </Button>
                 ) : (
                   <span className="flex items-center justify-end text-green-600 font-medium">
