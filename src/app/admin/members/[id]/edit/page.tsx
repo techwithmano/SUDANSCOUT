@@ -10,8 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserCog } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTranslation } from '@/context/LanguageContext';
 
-// This function can remain a server-side utility, but the component needs to be a client component
 async function getScout(id: string): Promise<Scout | null> {
   const scoutRef = doc(db, 'scouts', id);
   const scoutSnap = await getDoc(scoutRef);
@@ -25,6 +25,7 @@ async function getScout(id: string): Promise<Scout | null> {
 
 
 export default function EditMemberPage({ params }: { params: { id: string } }) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [scout, setScout] = useState<Scout | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,7 +68,7 @@ export default function EditMemberPage({ params }: { params: { id: string } }) {
         <CardHeader>
           <CardTitle className="font-headline text-2xl flex items-center gap-2">
             <UserCog className="h-6 w-6 text-primary" />
-            Edit Member Profile
+            {t('admin.editMemberTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent>

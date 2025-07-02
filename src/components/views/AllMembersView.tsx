@@ -38,7 +38,7 @@ export default function AllMembersView() {
         setScouts(scoutsList);
     } catch (error) {
         console.error("Error fetching scouts:", error);
-        toast({ variant: 'destructive', title: "Error", description: "Could not fetch members list." });
+        toast({ variant: 'destructive', title: t('admin.fetchError'), description: t('admin.fetchErrorDesc') });
     }
     setIsLoading(false);
   };
@@ -65,24 +65,22 @@ export default function AllMembersView() {
   }
 
   const handleDelete = async (scout: Scout) => {
-    // Final check for admin permission right before the operation
     if (auth.currentUser?.email !== ADMIN_EMAIL) {
-        toast({ variant: "destructive", title: "Permission Denied", description: "You are not authorized to perform this action." });
-        console.error("Delete attempt by non-admin:", auth.currentUser?.email);
+        toast({ variant: "destructive", title: t('admin.permissionDenied'), description: "You are not authorized to perform this action." });
         return;
     }
 
     try {
         await deleteDoc(doc(db, 'scouts', scout.id));
-        toast({ title: "Success", description: `${scout.fullName} has been deleted.` });
+        toast({ title: t('admin.updateSuccess'), description: t('admin.deleteSuccessDesc', { name: scout.fullName }) });
         fetchScouts(); // Refetch the list
     } catch (error) {
         console.error("Firestore Delete Error:", error);
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
         toast({ 
             variant: 'destructive', 
-            title: "Firestore Error", 
-            description: `Failed to delete scout. Please ensure your Firestore rules are correctly configured. Error: ${errorMessage}` 
+            title: t('admin.saveError'), 
+            description: t('admin.deleteErrorDesc', { error: errorMessage })
         });
     }
   };
