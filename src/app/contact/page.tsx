@@ -12,8 +12,6 @@ import { Mail, Phone, Send, Facebook, Instagram } from "lucide-react";
 import { useTranslation } from "@/context/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { submitContactForm } from "./actions";
-import { useState } from "react";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 
@@ -29,7 +27,6 @@ type ContactFormValues = z.infer<typeof contactSchema>;
 export default function ContactPage() {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
@@ -42,31 +39,27 @@ export default function ContactPage() {
   });
 
   async function onSubmit(data: ContactFormValues) {
-    setIsSubmitting(true);
-    try {
-      const result = await submitContactForm(data);
-      if (result.success) {
-        toast({
-          title: t('contact.successTitle'),
-          description: t('contact.successDescription'),
-        });
-        form.reset();
-      } else {
-        toast({
-          variant: 'destructive',
-          title: t('contact.errorTitle'),
-          description: result.message,
-        });
-      }
-    } catch (error) {
-       toast({
-          variant: 'destructive',
-          title: t('contact.errorTitle'),
-          description: t('contact.errorDescription'),
-        });
-    } finally {
-      setIsSubmitting(false);
-    }
+    // IMPORTANT: Replace this with your actual WhatsApp number, including the country code without the '+'.
+    const whatsAppNumber = "96512345678"; 
+
+    const messageBody = `New message from the Scout Central website:
+*Name:* ${data.name}
+*Email:* ${data.email}
+*Subject:* ${data.subject}
+
+*Message:*
+${data.message}`;
+    
+    const url = `https://wa.me/${whatsAppNumber}?text=${encodeURIComponent(messageBody)}`;
+
+    window.open(url, '_blank')?.focus();
+
+    toast({
+      title: t('contact.readyToSendTitle'),
+      description: t('contact.redirectWhatsApp'),
+    });
+    
+    form.reset();
   }
 
 
@@ -142,8 +135,8 @@ export default function ContactPage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" disabled={isSubmitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                  {isSubmitting ? t('contact.formSending') : t('contact.formSend')}
+                <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                  {t('contact.formSend')}
                 </Button>
               </form>
             </Form>
