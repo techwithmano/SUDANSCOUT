@@ -10,7 +10,7 @@ import { scoutSchema } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, PlusCircle, Trash2, ShieldQuestion, Calendar as CalendarIcon } from "lucide-react";
+import { Loader2, PlusCircle, Trash2, ShieldQuestion } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
@@ -22,9 +22,6 @@ import Image from "next/image";
 
 // New imports
 import imageCompression from 'browser-image-compression';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
 
 
 type ScoutFormValues = z.infer<typeof scoutSchema>;
@@ -200,42 +197,11 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
             control={form.control}
             name="dateOfBirth"
             render={({ field }) => (
-              <FormItem className="flex flex-col">
+              <FormItem>
                 <FormLabel>Date of Birth</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground"
-                        )}
-                      >
-                        {field.value ? (
-                          format(new Date(field.value), "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      captionLayout="dropdown-nav"
-                      fromYear={1950}
-                      toYear={new Date().getFullYear()}
-                      selected={field.value ? new Date(field.value) : undefined}
-                      onSelect={(date) => field.onChange(date ? format(date, 'yyyy-MM-dd') : '')}
-                      disabled={(date) =>
-                        date > new Date() || date < new Date("1900-01-01")
-                      }
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <FormControl>
+                  <Input type="date" {...field} className="w-full" />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
