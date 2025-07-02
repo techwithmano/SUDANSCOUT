@@ -10,11 +10,8 @@ import { scoutSchema } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Loader2, PlusCircle, Trash2, ShieldQuestion, Upload } from "lucide-react";
+import { Loader2, PlusCircle, Trash2, ShieldQuestion } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Separator } from "../ui/separator";
@@ -54,9 +51,13 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
 
   useEffect(() => {
     if (scout) {
+      // Format date to YYYY-MM-DD for the input[type=date]
+      const dob = scout.dateOfBirth ? new Date(scout.dateOfBirth) : null;
+      const formattedDob = dob ? dob.toISOString().split('T')[0] : "";
+
       form.reset({
         ...scout,
-        dateOfBirth: scout.dateOfBirth ? new Date(scout.dateOfBirth).toISOString() : "",
+        dateOfBirth: formattedDob,
       });
       setImagePreview(scout.imageUrl);
     } else {
@@ -161,34 +162,19 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
           />
           <div/>
           <FormField control={form.control} name="fullName" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-          <FormField control={form.control} name="dateOfBirth" render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Date of Birth</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
-                      {field.value ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    captionLayout="dropdown-buttons"
-                    fromYear={1940}
-                    toYear={new Date().getFullYear()}
-                    selected={field.value ? new Date(field.value) : undefined}
-                    onSelect={(date) => field.onChange(date?.toISOString())}
-                    disabled={(date) => date > new Date() || date < new Date("1940-01-01")}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )} />
+          <FormField
+            control={form.control}
+            name="dateOfBirth"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date of Birth</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField control={form.control} name="address" render={({ field }) => (<FormItem><FormLabel>Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
           <FormField control={form.control} name="group" render={({ field }) => (<FormItem><FormLabel>Group</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
           
