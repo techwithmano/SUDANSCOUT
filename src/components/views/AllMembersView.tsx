@@ -90,10 +90,38 @@ export default function AllMembersView() {
   };
 
   const handleExportCSV = () => {
-    const dataToExport = scouts.map(scout => ({
-        ...scout,
-        payments: JSON.stringify(scout.payments || []),
-    }));
+    const dataToExport: any[] = [];
+    scouts.forEach(scout => {
+      const baseScoutData = {
+        id: scout.id,
+        fullName: scout.fullName,
+        dateOfBirth: scout.dateOfBirth,
+        address: scout.address,
+        group: scout.group,
+        imageUrl: scout.imageUrl,
+      };
+
+      if (scout.payments && scout.payments.length > 0) {
+        scout.payments.forEach(payment => {
+          dataToExport.push({
+            ...baseScoutData,
+            payment_month: payment.month,
+            payment_amount: payment.amount,
+            payment_status: payment.status,
+            payment_datePaid: payment.datePaid || '',
+          });
+        });
+      } else {
+        dataToExport.push({
+          ...baseScoutData,
+          payment_month: '',
+          payment_amount: '',
+          payment_status: '',
+          payment_datePaid: '',
+        });
+      }
+    });
+
     const csv = Papa.unparse(dataToExport);
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -126,38 +154,67 @@ export default function AllMembersView() {
           const batch = writeBatch(db);
           let successCount = 0;
           let skippedCount = 0;
+          let errorCount = 0;
+          
+          const membersData = new Map<string, any>();
 
           for (const row of results.data as any[]) {
-            try {
-              const payments = row.payments ? JSON.parse(row.payments) : [];
-              const scoutData = { ...row, payments };
-              const validatedData = scoutSchema.parse(scoutData);
-              
-              if (existingScoutIds.has(validatedData.id)) {
-                skippedCount++;
-                continue;
-              }
+            if (!row.id) continue;
 
-              const scoutRef = doc(db, 'scouts', validatedData.id);
-              const { id, ...savableData } = validatedData;
-              batch.set(scoutRef, savableData);
-              successCount++;
-            } catch (parseError) {
-              console.error('Skipping invalid row:', row, parseError);
-              skippedCount++;
+            if (!membersData.has(row.id)) {
+              membersData.set(row.id, {
+                id: row.id,
+                fullName: row.fullName,
+                dateOfBirth: row.dateOfBirth,
+                address: row.address,
+                group: row.group,
+                imageUrl: row.imageUrl,
+                payments: [],
+              });
+            }
+
+            if (row.payment_month && row.payment_amount && row.payment_status) {
+              const member = membersData.get(row.id);
+              if (member) {
+                  member.payments.push({
+                    month: row.payment_month,
+                    amount: parseFloat(row.payment_amount),
+                    status: row.payment_status,
+                    datePaid: row.payment_datePaid || null,
+                  });
+              }
             }
           }
           
-          if(successCount > 0) {
+          for (const [id, scoutData] of membersData.entries()) {
+            try {
+              if (existingScoutIds.has(id)) {
+                skippedCount++;
+                continue;
+              }
+              
+              const validatedData = scoutSchema.parse(scoutData);
+              
+              const scoutRef = doc(db, 'scouts', validatedData.id);
+              const { id: scoutId, ...savableData } = validatedData;
+              batch.set(scoutRef, savableData);
+              successCount++;
+            } catch (parseError) {
+              console.error('Skipping invalid row data for scout ID:', id, parseError);
+              errorCount++;
+            }
+          }
+
+          if (successCount > 0) {
             await batch.commit();
           }
 
           toast({
             title: t('admin.importSuccessTitle'),
-            description: t('admin.importSuccessDesc', { successCount: String(successCount), skippedCount: String(skippedCount) }),
+            description: t('admin.importSuccessDesc', { successCount: String(successCount), skippedCount: String(skippedCount + errorCount) }),
           });
           
-          if(successCount > 0) {
+          if (successCount > 0) {
             fetchScouts();
           }
         },
