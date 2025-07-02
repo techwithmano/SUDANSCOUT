@@ -37,7 +37,7 @@ export default function AdminProductsPage() {
         setProducts(productsList);
     } catch (error) {
         console.error("Error fetching products:", error);
-        toast({ variant: 'destructive', title: "Error", description: "Could not fetch products list." });
+        toast({ variant: 'destructive', title: t('admin.fetchProductsError'), description: t('admin.fetchProductsErrorDesc') });
     }
     setIsLoading(false);
   }
@@ -65,7 +65,7 @@ export default function AdminProductsPage() {
   
   const handleDelete = async (productId: string) => {
     if (auth.currentUser?.email !== ADMIN_EMAIL) {
-        toast({ variant: "destructive", title: "Permission Denied", description: "You are not authorized to perform this action." });
+        toast({ variant: "destructive", title: t('admin.deletePermissionError'), description: t('admin.deletePermissionErrorDesc') });
         return;
     }
 
@@ -75,7 +75,7 @@ export default function AdminProductsPage() {
         await fetchProducts(); // Refetch products
     } catch (error) {
         console.error("Failed to delete product:", error);
-        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+        const errorMessage = error instanceof Error ? error.message : t('admin.unknownError');
         toast({ variant: 'destructive', title: t('admin.productDeletedError'), description: errorMessage });
     }
   };
@@ -111,7 +111,7 @@ export default function AdminProductsPage() {
                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
               ) : (
-              <div className="border rounded-md">
+              <div className="border rounded-md overflow-x-auto">
               <Table>
                   <TableHeader>
                       <TableRow>
@@ -128,7 +128,7 @@ export default function AdminProductsPage() {
                                   <Image src={product.imageUrl} alt={product.name_en || product.aiHint} width={40} height={40} className="rounded-sm object-cover" />
                                   <span>{product.name_en} / {product.name_ar}</span>
                               </TableCell>
-                              <TableCell>{product.category}</TableCell>
+                              <TableCell>{t(`admin.category${product.category.charAt(0).toUpperCase() + product.category.slice(1)}`)}</TableCell>
                               <TableCell>{product.price.toFixed(3)} KWD</TableCell>
                               <TableCell className="text-right">
                                 <div className="flex gap-2 justify-end">

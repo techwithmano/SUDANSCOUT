@@ -113,7 +113,7 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
       }
     } catch (error) {
       console.error("Failed to save scout:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      const errorMessage = error instanceof Error ? error.message : t('admin.unknownError');
       toast({ variant: "destructive", title: t('admin.saveError'), description: t('admin.saveErrorDesc', { error: errorMessage }) });
     } finally {
       setIsSubmitting(false);

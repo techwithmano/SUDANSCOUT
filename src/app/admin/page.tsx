@@ -88,7 +88,7 @@ export default function AdminLoginPage() {
                   <FormItem>
                     <FormLabel>{t('contact.formEmail')}</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="admin@example.com" {...field} />
+                      <Input type="email" placeholder={t('admin.emailPlaceholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

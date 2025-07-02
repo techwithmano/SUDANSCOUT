@@ -70,7 +70,7 @@ export function ProductFormDialog({ isOpen, onClose, product }: ProductFormDialo
     setIsSubmitting(true);
 
     if (auth.currentUser?.email !== ADMIN_EMAIL) {
-        toast({ variant: "destructive", title: t('admin.permissionDenied'), description: "You are not authorized to save product data." });
+        toast({ variant: "destructive", title: t('admin.permissionDenied'), description: t('admin.savePermissionErrorDesc') });
         setIsSubmitting(false);
         return;
     }
@@ -87,7 +87,7 @@ export function ProductFormDialog({ isOpen, onClose, product }: ProductFormDialo
       onClose(true); // Signal that a save happened
     } catch (error) {
       console.error("Failed to save product:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      const errorMessage = error instanceof Error ? error.message : t('admin.unknownError');
       toast({ variant: "destructive", title: t('admin.saveError'), description: t('admin.saveErrorDesc', { error: errorMessage }) });
     } finally {
       setIsSubmitting(false);
@@ -138,7 +138,7 @@ export function ProductFormDialog({ isOpen, onClose, product }: ProductFormDialo
                 </DialogClose>
                 <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isEditMode ? t('admin.saveChanges') : t('admin.createMember')}
+                    {isEditMode ? t('admin.saveChanges') : t('admin.createProduct')}
                 </Button>
             </DialogFooter>
           </form>

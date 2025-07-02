@@ -114,7 +114,7 @@ export function CheckoutForm() {
                   <FormItem>
                     <FormLabel>{t('store.checkoutFirstName')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="John" {...field} />
+                      <Input placeholder={t('store.checkoutFirstNamePlaceholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -127,7 +127,7 @@ export function CheckoutForm() {
                   <FormItem>
                     <FormLabel>{t('store.checkoutLastName')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Doe" {...field} />
+                      <Input placeholder={t('store.checkoutLastNamePlaceholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -141,7 +141,7 @@ export function CheckoutForm() {
                 <FormItem>
                   <FormLabel>{t('store.checkoutAddress')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="123 Main St, Anytown" {...field} />
+                    <Input placeholder={t('store.checkoutAddressPlaceholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -155,7 +155,7 @@ export function CheckoutForm() {
                   <FormItem>
                     <FormLabel>{t('store.checkoutPhone')}</FormLabel>
                     <FormControl>
-                      <Input type="tel" placeholder="(123) 456-7890" {...field} />
+                      <Input type="tel" placeholder={t('store.checkoutPhonePlaceholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -168,7 +168,7 @@ export function CheckoutForm() {
                   <FormItem>
                     <FormLabel>{t('store.checkoutEmail')}</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="you@example.com" {...field} />
+                      <Input type="email" placeholder={t('store.checkoutEmailPlaceholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -182,7 +182,7 @@ export function CheckoutForm() {
                 <FormItem>
                   <FormLabel>{t('store.checkoutScoutId')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., 12345" {...field} />
+                    <Input placeholder={t('store.checkoutScoutIdPlaceholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

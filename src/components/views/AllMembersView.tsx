@@ -76,7 +76,7 @@ export default function AllMembersView() {
         fetchScouts(); // Refetch the list
     } catch (error) {
         console.error("Firestore Delete Error:", error);
-        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+        const errorMessage = error instanceof Error ? error.message : t('admin.unknownError');
         toast({ 
             variant: 'destructive', 
             title: t('admin.saveError'), 

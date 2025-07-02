@@ -16,7 +16,7 @@ import type { Scout } from "@/lib/data";
 const ADMIN_EMAIL = 'sudanscoutadmin@scout.com';
 
 export default function MemberProfileView({ scout }: { scout: Scout }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { user } = useAuth();
   const isAdmin = user?.email === ADMIN_EMAIL;
 
@@ -31,6 +31,18 @@ export default function MemberProfileView({ scout }: { scout: Scout }) {
       return `${names[0][0]}${names[names.length - 1][0]}`;
     }
     return name.substring(0, 2);
+  };
+  
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const targetLocale = locale === 'ar' ? 'ar-SA' : 'en-US';
+    return date.toLocaleDateString(targetLocale, { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+  
+  const formatPaidDate = (dateString: string) => {
+      const date = new Date(dateString);
+      const targetLocale = locale === 'ar' ? 'ar-SA' : 'en-US';
+      return date.toLocaleDateString(targetLocale);
   };
 
   return (
@@ -63,7 +75,7 @@ export default function MemberProfileView({ scout }: { scout: Scout }) {
                     <Cake className="h-6 w-6 text-primary" />
                     <div>
                         <p className="font-semibold">{t('memberProfile.birthDate')}</p>
-                        <p className="text-muted-foreground">{new Date(scout.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        <p className="text-muted-foreground">{formatDate(scout.dateOfBirth)}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-secondary rounded-lg">
@@ -84,7 +96,7 @@ export default function MemberProfileView({ scout }: { scout: Scout }) {
 
             <div className="mt-12">
                 <h2 className="text-2xl font-bold font-headline text-primary">{t('memberProfile.paymentStatus')}</h2>
-                <PaymentSection scout={scout} />
+                <PaymentSection scout={scout} formatPaidDate={formatPaidDate} />
             </div>
         </CardContent>
       </Card>
