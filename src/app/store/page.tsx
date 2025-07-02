@@ -1,7 +1,11 @@
+
 import { collection, getDocs, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Product } from '@/lib/data';
 import StoreView from '@/components/views/StoreView';
+
+// Force this page to be dynamically rendered
+export const dynamic = 'force-dynamic';
 
 async function getProducts(): Promise<Product[]> {
   const productsCol = collection(db, 'products');

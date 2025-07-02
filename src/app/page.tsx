@@ -1,7 +1,11 @@
+
 import { collection, getDocs, limit, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Product } from '@/lib/data';
 import HomeView from '@/components/views/HomeView';
+
+// Force this page to be dynamically rendered
+export const dynamic = 'force-dynamic';
 
 async function getFeaturedProducts(): Promise<Product[]> {
   const productsCol = collection(db, 'products');
