@@ -11,18 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Loader2, PlusCircle, Trash2, ShieldQuestion } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Separator } from "../ui/separator";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
-import { db, auth, storage } from "@/lib/firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import Image from "next/image";
-
-// New imports
-import imageCompression from 'browser-image-compression';
-
+import { db, auth } from "@/lib/firebase";
 
 type ScoutFormValues = z.infer<typeof scoutSchema>;
 
@@ -36,9 +29,6 @@ const ADMIN_EMAIL = 'sudanscoutadmin@scout.com';
 export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCompressing, setIsCompressing] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(scout?.imageUrl || null);
   const isEditMode = !!scout;
 
   const form = useForm<ScoutFormValues>({
@@ -49,7 +39,7 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
       dateOfBirth: "",
       address: "",
       group: "",
-      imageUrl: "https://placehold.co/400x400.png",
+      imageUrl: "",
       payments: [],
     },
   });
@@ -62,8 +52,8 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
       form.reset({
         ...scout,
         dateOfBirth: formattedDob,
+        imageUrl: scout.imageUrl === 'https://placehold.co/400x400.png' ? '' : scout.imageUrl,
       });
-      setImagePreview(scout.imageUrl);
     } else {
       form.reset({
         id: "",
@@ -71,10 +61,9 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
         dateOfBirth: "",
         address: "",
         group: "",
-        imageUrl: "https://placehold.co/400x400.png",
+        imageUrl: "",
         payments: [],
       });
-      setImagePreview(null);
     }
   }, [scout, form]);
 
@@ -82,44 +71,6 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
     control: form.control,
     name: "payments",
   });
-
-  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setIsCompressing(true);
-      toast({ title: "Processing Image", description: "Compressing image for faster upload..." });
-      
-      const options = {
-        maxSizeMB: 0.5, // 500KB
-        maxWidthOrHeight: 512,
-        useWebWorker: true,
-      };
-
-      try {
-        const compressedFile = await imageCompression(file, options);
-        const namedCompressedFile = new File([compressedFile], file.name, {
-            type: file.type,
-            lastModified: Date.now(),
-        });
-
-        setImageFile(namedCompressedFile);
-        const previewUrl = URL.createObjectURL(namedCompressedFile);
-        setImagePreview(previewUrl);
-
-      } catch (error) {
-        console.error("Image compression error:", error);
-        toast({
-          variant: "destructive",
-          title: "Compression Error",
-          description: "Could not process image. Please try a different one.",
-        });
-        setImageFile(null);
-        setImagePreview(scout?.imageUrl || null);
-      } finally {
-        setIsCompressing(false);
-      }
-    }
-  };
 
   const onSubmit = async (data: ScoutFormValues) => {
     setIsSubmitting(true);
@@ -131,17 +82,9 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
     }
     
     try {
-      let finalImageUrl = scout?.imageUrl || "https://placehold.co/400x400.png";
-
-      if (imageFile) {
-        const storageRef = ref(storage, `scout-images/${data.id || Date.now()}-${imageFile.name}`);
-        const uploadResult = await uploadBytes(storageRef, imageFile);
-        finalImageUrl = await getDownloadURL(uploadResult.ref);
-      }
-      
       const scoutData = {
         ...data,
-        imageUrl: finalImageUrl,
+        imageUrl: data.imageUrl || "https://placehold.co/400x400.png",
       };
 
       const { id, ...savableData } = scoutData;
@@ -210,13 +153,20 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
           <FormField control={form.control} name="address" render={({ field }) => (<FormItem><FormLabel>Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
           <FormField control={form.control} name="group" render={({ field }) => (<FormItem><FormLabel>Group</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
           
-          <div className="md:col-span-2 space-y-2">
-            <FormLabel htmlFor="picture">Profile Picture</FormLabel>
-            <div className="flex items-center gap-4">
-              {imagePreview && <Image src={imagePreview} alt="Profile preview" width={80} height={80} className="rounded-full object-cover aspect-square" />}
-              <Input id="picture" type="file" accept="image/png, image/jpeg, image/gif" onChange={handleImageChange} className="flex-1" disabled={isCompressing} />
-            </div>
-            {isCompressing && <div className="flex items-center text-sm text-muted-foreground"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Compressing image...</div>}
+          <div className="md:col-span-2">
+            <FormField
+              control={form.control}
+              name="imageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Profile Picture URL</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="https://example.com/image.png" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
         </div>
         
@@ -254,9 +204,9 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
         </div>
 
         <div className="flex justify-end pt-4">
-            <Button type="submit" disabled={isSubmitting || isCompressing}>
-                {(isSubmitting || isCompressing) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isSubmitting ? 'Saving...' : isCompressing ? 'Processing Image...' : isEditMode ? 'Save Changes' : 'Create Member'}
+            <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSubmitting ? 'Saving...' : isEditMode ? 'Save Changes' : 'Create Member'}
             </Button>
         </div>
       </form>
