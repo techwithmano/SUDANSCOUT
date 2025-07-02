@@ -10,7 +10,7 @@ import { scoutSchema } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, PlusCircle, Trash2, ShieldQuestion } from "lucide-react";
+import { Loader2, PlusCircle, Trash2, ShieldQuestion, Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
@@ -19,6 +19,13 @@ import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db, auth, storage } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Image from "next/image";
+
+// New imports
+import imageCompression from 'browser-image-compression';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+
 
 type ScoutFormValues = z.infer<typeof scoutSchema>;
 
@@ -32,6 +39,7 @@ const ADMIN_EMAIL = 'sudanscoutadmin@scout.com';
 export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(scout?.imageUrl || null);
   const isEditMode = !!scout;
@@ -51,9 +59,8 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
 
   useEffect(() => {
     if (scout) {
-      // Format date to YYYY-MM-DD for the input[type=date]
       const dob = scout.dateOfBirth ? new Date(scout.dateOfBirth) : null;
-      const formattedDob = dob ? dob.toISOString().split('T')[0] : "";
+      const formattedDob = dob && !isNaN(dob.getTime()) ? dob.toISOString().split('T')[0] : "";
 
       form.reset({
         ...scout,
@@ -79,12 +86,41 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
     name: "payments",
   });
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setImageFile(file);
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
+      setIsCompressing(true);
+      toast({ title: "Processing Image", description: "Compressing image for faster upload..." });
+      
+      const options = {
+        maxSizeMB: 0.5, // 500KB
+        maxWidthOrHeight: 512,
+        useWebWorker: true,
+      };
+
+      try {
+        const compressedFile = await imageCompression(file, options);
+        const namedCompressedFile = new File([compressedFile], file.name, {
+            type: file.type,
+            lastModified: Date.now(),
+        });
+
+        setImageFile(namedCompressedFile);
+        const previewUrl = URL.createObjectURL(namedCompressedFile);
+        setImagePreview(previewUrl);
+
+      } catch (error) {
+        console.error("Image compression error:", error);
+        toast({
+          variant: "destructive",
+          title: "Compression Error",
+          description: "Could not process image. Please try a different one.",
+        });
+        setImageFile(null);
+        setImagePreview(scout?.imageUrl || null);
+      } finally {
+        setIsCompressing(false);
+      }
     }
   };
 
@@ -100,7 +136,6 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
     try {
       let finalImageUrl = scout?.imageUrl || "https://placehold.co/400x400.png";
 
-      // If a new image was selected, upload it to Firebase Storage
       if (imageFile) {
         const storageRef = ref(storage, `scout-images/${data.id || Date.now()}-${imageFile.name}`);
         const uploadResult = await uploadBytes(storageRef, imageFile);
@@ -115,12 +150,10 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
       const { id, ...savableData } = scoutData;
       
       if (isEditMode && scout) {
-        // Update existing scout
         const scoutRef = doc(db, 'scouts', scout.id);
         await updateDoc(scoutRef, savableData);
         toast({ title: "Success!", description: "Member profile has been updated." });
       } else {
-        // Create new scout
         const scoutRef = doc(db, 'scouts', id);
         const docSnap = await getDoc(scoutRef);
         if (docSnap.exists()) {
@@ -162,19 +195,52 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
           />
           <div/>
           <FormField control={form.control} name="fullName" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+          
           <FormField
             control={form.control}
             name="dateOfBirth"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex flex-col">
                 <FormLabel>Date of Birth</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(new Date(field.value), "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      captionLayout="dropdown-nav"
+                      fromYear={1950}
+                      toYear={new Date().getFullYear()}
+                      selected={field.value ? new Date(field.value) : undefined}
+                      onSelect={(date) => field.onChange(date ? format(date, 'yyyy-MM-dd') : '')}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
                 <FormMessage />
               </FormItem>
             )}
           />
+
           <FormField control={form.control} name="address" render={({ field }) => (<FormItem><FormLabel>Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
           <FormField control={form.control} name="group" render={({ field }) => (<FormItem><FormLabel>Group</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
           
@@ -182,8 +248,9 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
             <FormLabel htmlFor="picture">Profile Picture</FormLabel>
             <div className="flex items-center gap-4">
               {imagePreview && <Image src={imagePreview} alt="Profile preview" width={80} height={80} className="rounded-full object-cover aspect-square" />}
-              <Input id="picture" type="file" accept="image/png, image/jpeg, image/gif" onChange={handleImageChange} className="flex-1" />
+              <Input id="picture" type="file" accept="image/png, image/jpeg, image/gif" onChange={handleImageChange} className="flex-1" disabled={isCompressing} />
             </div>
+            {isCompressing && <div className="flex items-center text-sm text-muted-foreground"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Compressing image...</div>}
           </div>
         </div>
         
@@ -221,9 +288,9 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
         </div>
 
         <div className="flex justify-end pt-4">
-            <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isEditMode ? 'Save Changes' : 'Create Member'}
+            <Button type="submit" disabled={isSubmitting || isCompressing}>
+                {(isSubmitting || isCompressing) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSubmitting ? 'Saving...' : isCompressing ? 'Processing Image...' : isEditMode ? 'Save Changes' : 'Create Member'}
             </Button>
         </div>
       </form>
