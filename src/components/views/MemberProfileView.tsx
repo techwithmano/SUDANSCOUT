@@ -38,12 +38,6 @@ export default function MemberProfileView({ scout }: { scout: Scout }) {
     const targetLocale = locale === 'ar' ? 'ar-SA' : 'en-US';
     return date.toLocaleDateString(targetLocale, { year: 'numeric', month: 'long', day: 'numeric' });
   };
-  
-  const formatPaidDate = (dateString: string) => {
-      const date = new Date(dateString);
-      const targetLocale = locale === 'ar' ? 'ar-SA' : 'en-US';
-      return date.toLocaleDateString(targetLocale);
-  };
 
   return (
     <div className="container mx-auto px-4 py-16">
@@ -96,7 +90,7 @@ export default function MemberProfileView({ scout }: { scout: Scout }) {
 
             <div className="mt-12">
                 <h2 className="text-2xl font-bold font-headline text-primary">{t('memberProfile.paymentStatus')}</h2>
-                <PaymentSection scout={scout} formatPaidDate={formatPaidDate} />
+                <PaymentSection scout={scout} />
             </div>
         </CardContent>
       </Card>

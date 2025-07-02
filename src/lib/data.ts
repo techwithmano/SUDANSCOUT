@@ -30,7 +30,6 @@ export const paymentSchema = z.object({
   month: z.string().min(1, "Month is required"),
   amount: z.coerce.number().min(0, "Amount must be a positive number"),
   status: z.enum(["paid", "due"]),
-  datePaid: z.string().optional().nullable(),
 });
 
 export const scoutSchema = z.object({

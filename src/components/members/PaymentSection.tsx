@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { CheckCircle2, CircleDollarSign } from "lucide-react";
 import { useTranslation } from "@/context/LanguageContext";
 
-export function PaymentSection({ scout, formatPaidDate }: { scout: Scout, formatPaidDate: (date: string) => string }) {
+export function PaymentSection({ scout }: { scout: Scout }) {
   const { t, locale } = useTranslation();
 
   const currentPayments = scout.payments || [];
@@ -74,11 +74,6 @@ export function PaymentSection({ scout, formatPaidDate }: { scout: Scout, format
                 >
                   {payment.status === 'paid' ? t('memberProfile.paid') : t('memberProfile.due')}
                 </Badge>
-                {payment.status === 'paid' && payment.datePaid && (
-                   <p className="text-xs text-muted-foreground mt-1">
-                    {t('memberProfile.on')} {formatPaidDate(payment.datePaid)}
-                  </p>
-                )}
               </TableCell>
               <TableCell className="text-right">
                 {payment.status === "due" ? (

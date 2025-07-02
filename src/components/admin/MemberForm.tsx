@@ -233,7 +233,7 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
                             </div>
                         ))
                     )}
-                    <Button type="button" variant="outline" size="sm" onClick={() => append({ month: "", amount: 20, status: "due", datePaid: null })}><PlusCircle className="mr-2 h-4 w-4" /> {t('admin.addPayment')}</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => append({ month: "", amount: 20, status: "due" })}><PlusCircle className="mr-2 h-4 w-4" /> {t('admin.addPayment')}</Button>
                 </div>
             </CardContent>
         </Card>

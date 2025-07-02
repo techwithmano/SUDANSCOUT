@@ -105,7 +105,6 @@ export default function AllMembersView() {
       paymentHeaders.push(`payment_month_${i}`);
       paymentHeaders.push(`payment_amount_${i}`);
       paymentHeaders.push(`payment_status_${i}`);
-      paymentHeaders.push(`payment_datePaid_${i}`);
     }
     
     const headers = [...baseHeaders, ...paymentHeaders];
@@ -126,7 +125,6 @@ export default function AllMembersView() {
         row[`payment_month_${i}`] = payment.month;
         row[`payment_amount_${i}`] = payment.amount;
         row[`payment_status_${i}`] = payment.status;
-        row[`payment_datePaid_${i}`] = payment.datePaid || '';
       });
 
       return row;
@@ -183,7 +181,6 @@ export default function AllMembersView() {
                 month: row[`payment_month_${i}`],
                 amount: parseFloat(row[`payment_amount_${i}`]) || 0,
                 status: row[`payment_status_${i}`],
-                datePaid: row[`payment_datePaid_${i}`] || null,
               };
 
               if (payment.month && payment.status) {
