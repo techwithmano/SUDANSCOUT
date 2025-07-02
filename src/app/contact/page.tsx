@@ -39,7 +39,7 @@ export default function ContactPage() {
   });
 
   async function onSubmit(data: ContactFormValues) {
-    const whatsAppNumber = "96565560890"; 
+    const whatsAppNumber = "249963081890"; 
 
     const messageBody = `New message from the Scout Central website:
 *Name:* ${data.name}

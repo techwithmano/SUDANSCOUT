@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/context/LanguageContext";
-import { placeOrder } from "@/app/store/actions";
 import { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
@@ -28,7 +27,7 @@ type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
 export function CheckoutForm() {
   const { toast } = useToast();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { cartItems, totalPrice, clearCart } = useCart();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,36 +46,42 @@ export function CheckoutForm() {
 
   async function onSubmit(data: CheckoutFormValues) {
     setIsSubmitting(true);
-    try {
-      const result = await placeOrder({
-        customerDetails: data,
-        cartItems: cartItems,
-        totalPrice: totalPrice
-      });
-       if (result.success) {
-        toast({
-          title: t('store.checkoutSuccessTitle'),
-          description: t('store.checkoutSuccessDescription'),
-        });
-        form.reset();
-        clearCart();
-        router.push('/store');
-      } else {
-        toast({
-          variant: 'destructive',
-          title: t('store.checkoutErrorTitle'),
-          description: result.message,
-        });
-      }
-    } catch (error) {
-       toast({
-          variant: 'destructive',
-          title: t('store.checkoutErrorTitle'),
-          description: t('store.checkoutErrorDescription'),
-        });
-    } finally {
-        setIsSubmitting(false);
+    const whatsAppNumber = "249963081890";
+
+    const itemsSummary = cartItems.map(item => {
+        const productName = (locale === 'ar' ? item.name_ar : item.name_en) || item.name_en || item.name_ar || item.name;
+        const sizeInfo = item.size ? ` (${t('product.size')}: ${item.size})` : '';
+        return `- ${item.quantity}x ${productName}${sizeInfo}`;
+    }).join('\n');
+
+    let messageBody = `*New Order from Scout Central Website:*\n\n`;
+    messageBody += `*Customer Details:*\n`;
+    messageBody += `Name: ${data.firstName} ${data.lastName}\n`;
+    messageBody += `Address: ${data.address}\n`;
+    messageBody += `Phone: ${data.phone}\n`;
+    messageBody += `Email: ${data.email}\n`;
+    if (data.scoutId) {
+        messageBody += `Scout ID: ${data.scoutId}\n`;
     }
+    messageBody += `\n*Order Summary:*\n`;
+    messageBody += `${itemsSummary}\n\n`;
+    messageBody += `*Total Price: ${totalPrice.toFixed(3)} KWD*`;
+
+    const url = `https://wa.me/${whatsAppNumber}?text=${encodeURIComponent(messageBody)}`;
+
+    window.open(url, '_blank')?.focus();
+
+    toast({
+        title: t('contact.readyToSendTitle'),
+        description: t('contact.redirectWhatsApp'),
+    });
+    
+    form.reset();
+    clearCart();
+    router.push('/store');
+    
+    // This might not be reached if the redirect happens too fast, but it's good practice.
+    setIsSubmitting(false);
   }
 
   return (
