@@ -278,7 +278,7 @@ export default {
     importData: 'Import Data',
     importing: 'Importing...',
     importSuccessTitle: 'Import Complete',
-    importSuccessDesc: '{successCount} members imported successfully. {skippedCount} were skipped as they already exist.',
+    importProcessComplete: 'Process complete. Created: {createdCount}, Updated: {updatedCount}, Skipped with errors: {errorCount}.',
     importErrorTitle: 'Import Failed',
     importErrorDesc: 'The CSV file could not be parsed or uploaded. Please check the file format and try again. Error: {error}',
     selectCsv: 'Select CSV file to import',

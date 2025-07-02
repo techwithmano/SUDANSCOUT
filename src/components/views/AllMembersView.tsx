@@ -153,7 +153,6 @@ export default function AllMembersView() {
           for (const row of results.data as any[]) {
             if (!row.id) continue; // Skip rows without an ID
 
-            // If we haven't seen this member ID yet, create their base profile
             if (!membersData.has(row.id)) {
               membersData.set(row.id, {
                 id: row.id,
@@ -166,57 +165,59 @@ export default function AllMembersView() {
               });
             }
             
-            // Add payment record to the corresponding member
             const member = membersData.get(row.id);
             if (row.payment_month && row.payment_amount && row.payment_status) {
               member.payments.push({
                 month: row.payment_month,
-                amount: parseFloat(row.payment_amount),
+                amount: parseFloat(row.payment_amount) || 0,
                 status: row.payment_status,
                 datePaid: row.payment_datePaid || null,
               });
             }
           }
 
-          // Step 2: Check against Firestore and prepare batch write for NEW members only
+          // Step 2: Prepare a batch write to create or overwrite data
           const existingScoutsSnapshot = await getDocs(query(collection(db, 'scouts')));
           const existingScoutIds = new Set(existingScoutsSnapshot.docs.map(docData => docData.id));
           const batch = writeBatch(db);
-          let successCount = 0;
-          let skippedCount = 0;
+          
+          let createdCount = 0;
+          let updatedCount = 0;
           let errorCount = 0;
 
           for (const [id, scoutData] of membersData.entries()) {
-            // If the member ID from the CSV already exists in the database, skip them.
-            if (existingScoutIds.has(id)) {
-              skippedCount++;
-              continue;
-            }
-
             try {
-              // Validate the complete member object
               const validatedData = scoutSchema.parse(scoutData);
               const scoutRef = doc(db, 'scouts', validatedData.id);
               const { id: scoutId, ...savableData } = validatedData;
               batch.set(scoutRef, savableData);
-              successCount++;
+
+              if (existingScoutIds.has(id)) {
+                updatedCount++;
+              } else {
+                createdCount++;
+              }
             } catch (parseError) {
-              console.error('Skipping invalid row data for scout ID:', id, parseError);
+              console.error(`Skipping invalid row data for scout ID ${id}:`, parseError);
               errorCount++;
             }
           }
 
-          if (successCount > 0) {
+          if (createdCount + updatedCount > 0) {
             await batch.commit();
           }
 
           toast({
             title: t('admin.importSuccessTitle'),
-            description: t('admin.importSuccessDesc', { successCount: String(successCount), skippedCount: String(skippedCount + errorCount) }),
+            description: t('admin.importProcessComplete', { 
+                createdCount: String(createdCount), 
+                updatedCount: String(updatedCount),
+                errorCount: String(errorCount)
+            }),
           });
           
-          if (successCount > 0) {
-            await fetchScouts(); // Refresh the list to show newly imported members
+          if (createdCount + updatedCount > 0) {
+            await fetchScouts();
           }
         },
         error: (error: any) => { throw new Error(error.message); }

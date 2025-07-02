@@ -278,7 +278,7 @@ export default {
     importData: 'استيراد البيانات',
     importing: 'جاري الاستيراد...',
     importSuccessTitle: 'اكتمل الاستيراد',
-    importSuccessDesc: 'تم استيراد {successCount} عضوًا بنجاح. تم تخطي {skippedCount} لأنهم موجودون بالفعل.',
+    importProcessComplete: 'اكتملت المعالجة. تم إنشاء: {createdCount}، تم تحديث: {updatedCount}، تم تخطي بسبب أخطاء: {errorCount}.',
     importErrorTitle: 'فشل الاستيراد',
     importErrorDesc: 'تعذر تحليل ملف CSV أو تحميله. يرجى التحقق من تنسيق الملف والمحاولة مرة أخرى. الخطأ: {error}',
     selectCsv: 'اختر ملف CSV للاستيراد',
