@@ -90,16 +90,13 @@ export default function AllMembersView() {
   };
 
   const handleExportCSV = () => {
-    // Find the maximum number of payments for any single scout.
     const maxPayments = scouts.reduce((max, scout) => {
       const numPayments = scout.payments?.length || 0;
       return numPayments > max ? numPayments : max;
     }, 0);
 
-    // Define the base headers.
     const baseHeaders = ['id', 'fullName', 'dateOfBirth', 'address', 'group', 'imageUrl'];
     
-    // Generate dynamic payment headers.
     const paymentHeaders: string[] = [];
     for (let i = 1; i <= maxPayments; i++) {
       paymentHeaders.push(`payment_month_${i}`);
@@ -109,7 +106,6 @@ export default function AllMembersView() {
     
     const headers = [...baseHeaders, ...paymentHeaders];
 
-    // Transform scout data into the wide format.
     const dataToExport = scouts.map(scout => {
       const row: { [key: string]: any } = {
         id: scout.id,
@@ -124,7 +120,7 @@ export default function AllMembersView() {
         const i = index + 1;
         row[`payment_month_${i}`] = payment.month;
         row[`payment_amount_${i}`] = payment.amount;
-        row[`payment_status_${i}`] = payment.status;
+        row[`payment_status_${i}`] = payment.status === 'paid' ? t('admin.statusPaid') : t('admin.statusDue');
       });
 
       return row;
@@ -160,37 +156,45 @@ export default function AllMembersView() {
         header: true,
         skipEmptyLines: true,
         complete: async (results) => {
-          const membersData = new Map<string, any>();
-
+          const membersToUpsert: Scout[] = [];
           for (const row of results.data as any[]) {
             if (!row.id) continue;
-
+            
             const scoutData: any = {
-              id: row.id,
-              fullName: row.fullName,
-              dateOfBirth: row.dateOfBirth,
-              address: row.address,
-              group: row.group,
-              imageUrl: row.imageUrl,
-              payments: [],
+                id: row.id.trim(),
+                fullName: row.fullName,
+                dateOfBirth: row.dateOfBirth,
+                address: row.address,
+                group: row.group,
+                imageUrl: row.imageUrl,
+                payments: [],
             };
 
             let i = 1;
             while (row[`payment_month_${i}`]) {
+              const rawStatus = row[`payment_status_${i}`]?.trim().toLowerCase();
+              let finalStatus: 'paid' | 'due' = 'due';
+              
+              if (rawStatus === 'مدفوع' || rawStatus === 'paid') {
+                finalStatus = 'paid';
+              } else if (rawStatus === 'مستحق' || rawStatus === 'due') {
+                finalStatus = 'due';
+              }
+
               const payment = {
                 month: row[`payment_month_${i}`],
                 amount: parseFloat(row[`payment_amount_${i}`]) || 0,
-                status: row[`payment_status_${i}`],
+                status: finalStatus,
               };
-
-              if (payment.month && payment.status) {
+              
+              if (payment.month) {
                 scoutData.payments.push(payment);
               }
               i++;
             }
-            membersData.set(row.id, scoutData);
+            membersToUpsert.push(scoutData);
           }
-
+          
           const existingScoutsSnapshot = await getDocs(query(collection(db, 'scouts')));
           const existingScoutIds = new Set(existingScoutsSnapshot.docs.map(docData => docData.id));
           const batch = writeBatch(db);
@@ -199,11 +203,11 @@ export default function AllMembersView() {
           let updatedCount = 0;
           let errorCount = 0;
 
-          for (const [id, scoutData] of membersData.entries()) {
+          for (const scoutData of membersToUpsert) {
             try {
               const validatedData = scoutSchema.parse(scoutData);
               const scoutRef = doc(db, 'scouts', validatedData.id);
-              const { id: scoutId, ...savableData } = validatedData;
+              const { id, ...savableData } = validatedData;
               batch.set(scoutRef, savableData);
 
               if (existingScoutIds.has(id)) {
@@ -212,7 +216,7 @@ export default function AllMembersView() {
                 createdCount++;
               }
             } catch (parseError) {
-              console.error(`Skipping invalid row data for scout ID ${id}:`, parseError);
+              console.error(`Skipping invalid row data for scout ID ${scoutData.id}:`, parseError);
               errorCount++;
             }
           }
