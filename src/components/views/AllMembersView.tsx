@@ -20,7 +20,7 @@ import Papa from 'papaparse';
 const ADMIN_EMAIL = 'sudanscoutadmin@scout.com';
 
 export default function AllMembersView() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { toast } = useToast();
   const [scouts, setScouts] = useState<Scout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -89,6 +89,14 @@ export default function AllMembersView() {
     }
   };
 
+  const formatDateForCSV = (dateString: string | undefined): string => {
+    if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      return dateString || '';
+    }
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
   const handleExportCSV = () => {
     const maxPayments = scouts.reduce((max, scout) => {
       const numPayments = scout.payments?.length || 0;
@@ -110,7 +118,7 @@ export default function AllMembersView() {
       const row: { [key: string]: any } = {
         id: scout.id,
         fullName: scout.fullName,
-        dateOfBirth: scout.dateOfBirth,
+        dateOfBirth: formatDateForCSV(scout.dateOfBirth),
         address: scout.address,
         group: scout.group,
         imageUrl: scout.imageUrl,
@@ -120,7 +128,9 @@ export default function AllMembersView() {
         const i = index + 1;
         row[`payment_month_${i}`] = payment.month;
         row[`payment_amount_${i}`] = payment.amount;
-        row[`payment_status_${i}`] = payment.status === 'paid' ? t('admin.statusPaid') : t('admin.statusDue');
+        row[`payment_status_${i}`] = locale === 'ar' 
+            ? (payment.status === 'paid' ? 'مدفوع' : 'مستحق')
+            : payment.status;
       });
 
       return row;
@@ -146,6 +156,14 @@ export default function AllMembersView() {
     fileInputRef.current?.click();
   };
 
+  const parseDateFromCSV = (dateString: string | undefined): string => {
+    if (!dateString || !/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+      return dateString || '';
+    }
+    const [day, month, year] = dateString.split('/');
+    return `${year}-${month}-${day}`;
+  };
+
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -163,7 +181,7 @@ export default function AllMembersView() {
             const scoutData: any = {
                 id: row.id.trim(),
                 fullName: row.fullName,
-                dateOfBirth: row.dateOfBirth,
+                dateOfBirth: parseDateFromCSV(row.dateOfBirth),
                 address: row.address,
                 group: row.group,
                 imageUrl: row.imageUrl,
