@@ -9,13 +9,13 @@ import { useTranslation } from '@/context/LanguageContext';
 import { Separator } from '@/components/ui/separator';
 
 const offices = [
-  { nameKey: 'officeSecretariat', members: ['ربا', 'رهف'] },
-  { nameKey: 'officePrograms', members: ['محمد سامي', 'ماجده', 'روان'] },
-  { nameKey: 'officeTraining', members: ['مأمون'] },
-  { nameKey: 'officeMedia', members: ['عثمان', 'عبدالرحمن'] },
-  { nameKey: 'officeFinance', members: ['ايمان', 'بسمله'] },
-  { nameKey: 'officeCustodian', members: ['هويده', 'رتاج'] },
-  { nameKey: 'officeCommunityService', members: ['مها', 'يمنى'] },
+  { nameKey: 'officeSecretariat', members: ['ربا حيدر محمد', ' رهف مهدي ميرغني'] },
+  { nameKey: 'officePrograms', members: ['محمد سامي', 'ماجدة عبدالله عبيد', 'روان ولي الدين'] },
+  { nameKey: 'officeTraining', members: ['مأمون سعيد المهدي'] },
+  { nameKey: 'officeMedia', members: ['عثمان هارون', 'عبدالرحمن خوجلي عابدين'] },
+  { nameKey: 'officeFinance', members: ['إيمان المليح ابراهيم', 'بسملة ايهاب'] },
+  { nameKey: 'officeCustodian', members: ['هويده حمدتو محمد', 'رتاج حيدر محمد'] },
+  { nameKey: 'officeCommunityService', members: ['مها شمس الفلاح', 'يمنى الطاهر امين'] },
 ];
 
 let personId = 0;
@@ -25,21 +25,21 @@ const leadership = {
       id: ++personId,
       name: 'مهدي ميرغني ليلي',
       role: 'roleChairman',
-      imageUrl: 'https://placehold.co/400x400.png',
+      imageUrl: '/1.png',
       dataAiHint: 'portrait man formal',
     },
     {
       id: ++personId,
       name: 'محمد يحيى',
       role: 'roleFirstHonoraryLeader',
-      imageUrl: 'https://placehold.co/400x400.png',
+      imageUrl: '/2.png',
       dataAiHint: 'portrait man senior',
     },
     {
       id: ++personId,
       name: 'مأمون سعيد المهدي',
       role: 'roleSecondGroupLeader',
-      imageUrl: 'https://placehold.co/400x400.png',
+      imageUrl: '/3.png',
       dataAiHint: 'portrait man professional',
     },
   ],
@@ -51,13 +51,13 @@ const leadership = {
           id: ++personId,
           name: 'عثمان هارون',
           role: 'roleTroopLeader',
-          imageUrl: 'https://placehold.co/400x400.png',
+          imageUrl: '/4.png',
           dataAiHint: 'portrait man beard',
         },
       ],
       assistants: [
-        { id: ++personId, name: 'محمد حسن محمد', role: 'roleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait man' },
-        { id: ++personId, name: 'عبدالرحمن خوجلي عابدين', role: 'roleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait man professional' },
+        { id: ++personId, name: 'محمد حسن محمد', role: 'roleTroopAssistant', imageUrl: '/5.png', dataAiHint: 'portrait man' },
+        { id: ++personId, name: 'عبدالرحمن خوجلي عابدين', role: 'roleTroopAssistant', imageUrl: '/6.png', dataAiHint: 'portrait man professional' },
       ],
     },
     {
@@ -67,12 +67,12 @@ const leadership = {
           id: ++personId,
           name: 'محمد سامي',
           role: 'roleTroopLeader',
-          imageUrl: 'https://placehold.co/400x400.png',
+          imageUrl: '/7.png',
           dataAiHint: 'portrait man serious',
         },
       ],
       assistants: [
-        { id: ++personId, name: 'امجد مهدي مرغني', role: 'roleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait man glasses' },
+        { id: ++personId, name: 'امجد مهدي مرغني', role: 'roleTroopAssistant', imageUrl: '/8.png', dataAiHint: 'portrait man glasses' },
       ],
     },
     {
@@ -82,12 +82,12 @@ const leadership = {
           id: ++personId,
           name: 'مازن صبري حسن',
           role: 'roleTroopLeader',
-          imageUrl: 'https://placehold.co/400x400.png',
+          imageUrl: '/9.png',
           dataAiHint: 'portrait man smiling',
         },
       ],
       assistants: [
-        { id: ++personId, name: 'عثمان عماد الدين', role: 'roleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait man' },
+        { id: ++personId, name: 'عثمان عماد الدين', role: 'roleTroopAssistant', imageUrl: '/10.png', dataAiHint: 'portrait man' },
       ],
     },
     {
@@ -97,19 +97,19 @@ const leadership = {
           id: ++personId,
           name: 'ماجدة عبدالله عبيد',
           role: 'roleFemaleTroopLeader',
-          imageUrl: 'https://placehold.co/400x400.png',
+          imageUrl: '/11.png',
           dataAiHint: 'portrait woman',
         },
         {
           id: ++personId,
           name: 'مها شمس الفلاح',
           role: 'roleFemaleTroopLeader',
-          imageUrl: 'https://placehold.co/400x400.png',
+          imageUrl: '/12.png',
           dataAiHint: 'portrait woman serious',
         },
       ],
       assistants: [
-        { id: ++personId, name: 'روان ولي الدين', role: 'roleFemaleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait woman young' },
+        { id: ++personId, name: 'روان ولي الدين', role: 'roleFemaleTroopAssistant', imageUrl: '/13.png', dataAiHint: 'portrait woman young' },
       ],
     },
     {
@@ -119,13 +119,13 @@ const leadership = {
           id: ++personId,
           name: 'إيمان المليح ابراهيم',
           role: 'roleFemaleTroopLeader',
-          imageUrl: 'https://placehold.co/400x400.png',
+          imageUrl: '/14.png',
           dataAiHint: 'portrait woman professional',
         },
       ],
       assistants: [
-        { id: ++personId, name: 'رتاج حيدر محمد', role: 'roleFemaleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait woman' },
-        { id: ++personId, name: 'يمنى الطاهر امين', role: 'roleFemaleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait woman glasses' },
+        { id: ++personId, name: 'رتاج حيدر محمد', role: 'roleFemaleTroopAssistant', imageUrl: '/15.png', dataAiHint: 'portrait woman' },
+        { id: ++personId, name: 'يمنى الطاهر امين', role: 'roleFemaleTroopAssistant', imageUrl: '/16.png', dataAiHint: 'portrait woman glasses' },
       ],
     },
     {
@@ -135,12 +135,12 @@ const leadership = {
           id: ++personId,
           name: 'خديجة ابوبكر هارون',
           role: 'roleFemaleTroopLeader',
-          imageUrl: 'https://placehold.co/400x400.png',
+          imageUrl: '/17.png',
           dataAiHint: 'portrait woman smiling',
         },
       ],
       assistants: [
-        { id: ++personId, name: 'بسملة ايهاب', role: 'roleFemaleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait woman young' },
+        { id: ++personId, name: 'بسملة ايهاب', role: 'roleFemaleTroopAssistant', imageUrl: '/18.png', dataAiHint: 'portrait woman young' },
       ],
     },
   ],
@@ -181,7 +181,7 @@ export default function AboutPage() {
       <div className="mt-16 grid md:grid-cols-2 gap-12 items-center">
         <div className="rounded-lg overflow-hidden shadow-xl">
           <Image
-            src="https://placehold.co/600x450.png"
+            src="/message.png"
             alt="A group of diverse scouts smiling"
             width={600}
             height={450}
@@ -305,7 +305,7 @@ export default function AboutPage() {
         </div>
         <div className="rounded-lg overflow-hidden shadow-xl">
           <Image
-            src="https://placehold.co/600x450.png"
+            src="/history.png"
             alt="Vintage photo of early scouts"
             width={600}
             height={450}

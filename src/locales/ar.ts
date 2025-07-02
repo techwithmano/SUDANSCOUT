@@ -91,9 +91,9 @@ export default {
     formSend: 'إرسال الرسالة',
     formSending: 'جار الإرسال...',
     infoTitle: 'معلومات الاتصال',
-    hqTitle: 'مقرنا الرئيسي',
     emailTitle: 'راسلنا عبر البريد الإلكتروني',
     callTitle: 'اتصل بنا',
+    followUsTitle: 'تابعنا',
     successTitle: 'تم إرسال الرسالة!',
     successDescription: 'شكراً لتواصلك معنا. سنرد عليك قريباً.',
     errorTitle: 'حدث خطأ',
@@ -218,5 +218,3 @@ export default {
     editProfile: 'تعديل الملف الشخصي',
   }
 };
-
-    

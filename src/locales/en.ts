@@ -91,9 +91,9 @@ export default {
     formSend: 'Send Message',
     formSending: 'Sending...',
     infoTitle: 'Contact Information',
-    hqTitle: 'Our Headquarters',
     emailTitle: 'Email Us',
     callTitle: 'Call Us',
+    followUsTitle: 'Follow Us',
     successTitle: 'Message Sent!',
     successDescription: "Thanks for reaching out. We'll get back to you shortly.",
     errorTitle: 'An Error Occurred',
@@ -218,5 +218,3 @@ export default {
     editProfile: 'Edit Profile',
   }
 };
-
-    
