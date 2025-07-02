@@ -90,9 +90,29 @@ export default function AllMembersView() {
   };
 
   const handleExportCSV = () => {
-    const dataToExport: any[] = [];
-    scouts.forEach(scout => {
-      const baseScoutData = {
+    // Find the maximum number of payments for any single scout.
+    const maxPayments = scouts.reduce((max, scout) => {
+      const numPayments = scout.payments?.length || 0;
+      return numPayments > max ? numPayments : max;
+    }, 0);
+
+    // Define the base headers.
+    const baseHeaders = ['id', 'fullName', 'dateOfBirth', 'address', 'group', 'imageUrl'];
+    
+    // Generate dynamic payment headers.
+    const paymentHeaders: string[] = [];
+    for (let i = 1; i <= maxPayments; i++) {
+      paymentHeaders.push(`payment_month_${i}`);
+      paymentHeaders.push(`payment_amount_${i}`);
+      paymentHeaders.push(`payment_status_${i}`);
+      paymentHeaders.push(`payment_datePaid_${i}`);
+    }
+    
+    const headers = [...baseHeaders, ...paymentHeaders];
+
+    // Transform scout data into the wide format.
+    const dataToExport = scouts.map(scout => {
+      const row: { [key: string]: any } = {
         id: scout.id,
         fullName: scout.fullName,
         dateOfBirth: scout.dateOfBirth,
@@ -101,28 +121,22 @@ export default function AllMembersView() {
         imageUrl: scout.imageUrl,
       };
 
-      if (scout.payments && scout.payments.length > 0) {
-        scout.payments.forEach(payment => {
-          dataToExport.push({
-            ...baseScoutData,
-            payment_month: payment.month,
-            payment_amount: payment.amount,
-            payment_status: payment.status,
-            payment_datePaid: payment.datePaid || '',
-          });
-        });
-      } else {
-        dataToExport.push({
-          ...baseScoutData,
-          payment_month: '',
-          payment_amount: '',
-          payment_status: '',
-          payment_datePaid: '',
-        });
-      }
-    });
+      (scout.payments || []).forEach((payment, index) => {
+        const i = index + 1;
+        row[`payment_month_${i}`] = payment.month;
+        row[`payment_amount_${i}`] = payment.amount;
+        row[`payment_status_${i}`] = payment.status;
+        row[`payment_datePaid_${i}`] = payment.datePaid || '';
+      });
 
-    const csv = Papa.unparse(dataToExport);
+      return row;
+    });
+    
+    const csv = Papa.unparse({
+        fields: headers,
+        data: dataToExport
+    });
+    
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -148,35 +162,38 @@ export default function AllMembersView() {
         header: true,
         skipEmptyLines: true,
         complete: async (results) => {
-          // Step 1: Group all rows by member ID to build complete member objects
           const membersData = new Map<string, any>();
-          for (const row of results.data as any[]) {
-            if (!row.id) continue; // Skip rows without an ID
 
-            if (!membersData.has(row.id)) {
-              membersData.set(row.id, {
-                id: row.id,
-                fullName: row.fullName,
-                dateOfBirth: row.dateOfBirth,
-                address: row.address,
-                group: row.group,
-                imageUrl: row.imageUrl,
-                payments: [],
-              });
+          for (const row of results.data as any[]) {
+            if (!row.id) continue;
+
+            const scoutData: any = {
+              id: row.id,
+              fullName: row.fullName,
+              dateOfBirth: row.dateOfBirth,
+              address: row.address,
+              group: row.group,
+              imageUrl: row.imageUrl,
+              payments: [],
+            };
+
+            let i = 1;
+            while (row[`payment_month_${i}`]) {
+              const payment = {
+                month: row[`payment_month_${i}`],
+                amount: parseFloat(row[`payment_amount_${i}`]) || 0,
+                status: row[`payment_status_${i}`],
+                datePaid: row[`payment_datePaid_${i}`] || null,
+              };
+
+              if (payment.month && payment.status) {
+                scoutData.payments.push(payment);
+              }
+              i++;
             }
-            
-            const member = membersData.get(row.id);
-            if (row.payment_month && row.payment_amount && row.payment_status) {
-              member.payments.push({
-                month: row.payment_month,
-                amount: parseFloat(row.payment_amount) || 0,
-                status: row.payment_status,
-                datePaid: row.payment_datePaid || null,
-              });
-            }
+            membersData.set(row.id, scoutData);
           }
 
-          // Step 2: Prepare a batch write to create or overwrite data
           const existingScoutsSnapshot = await getDocs(query(collection(db, 'scouts')));
           const existingScoutIds = new Set(existingScoutsSnapshot.docs.map(docData => docData.id));
           const batch = writeBatch(db);
