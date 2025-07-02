@@ -18,22 +18,26 @@ const offices = [
   { nameKey: 'officeCommunityService', members: ['مها', 'يمنى'] },
 ];
 
+let personId = 0;
 const leadership = {
   command: [
     {
+      id: ++personId,
       name: 'مهدي ميرغني ليلي',
       role: 'roleChairman',
       imageUrl: 'https://placehold.co/400x400.png',
       dataAiHint: 'portrait man formal',
     },
     {
+      id: ++personId,
       name: 'محمد يحيى',
       role: 'roleFirstHonoraryLeader',
       imageUrl: 'https://placehold.co/400x400.png',
       dataAiHint: 'portrait man senior',
     },
     {
-      name: 'مأمون',
+      id: ++personId,
+      name: 'مأمون سعيد المهدي',
       role: 'roleSecondGroupLeader',
       imageUrl: 'https://placehold.co/400x400.png',
       dataAiHint: 'portrait man professional',
@@ -41,79 +45,103 @@ const leadership = {
   ],
   troops: [
     {
-      troopNameKey: 'troopCubScouts',
-      leader: {
-        name: 'ماذن',
-        role: 'roleTroopLeader',
-        imageUrl: 'https://placehold.co/400x400.png',
-        dataAiHint: 'portrait man smiling',
-      },
+      troopNameKey: 'troopAdvanced',
+      leaders: [
+        {
+          id: ++personId,
+          name: 'عثمان هارون',
+          role: 'roleTroopLeader',
+          imageUrl: 'https://placehold.co/400x400.png',
+          dataAiHint: 'portrait man beard',
+        },
+      ],
       assistants: [
-        { name: 'عثمان', role: 'roleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait man' },
+        { id: ++personId, name: 'محمد حسن محمد', role: 'roleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait man' },
+        { id: ++personId, name: 'عبدالرحمن خوجلي عابدين', role: 'roleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait man professional' },
       ],
     },
     {
       troopNameKey: 'troopBoyScouts',
-      leader: {
-        name: 'محمد سامي',
-        role: 'roleTroopLeader',
-        imageUrl: 'https://placehold.co/400x400.png',
-        dataAiHint: 'portrait man serious',
-      },
+      leaders: [
+        {
+          id: ++personId,
+          name: 'محمد سامي',
+          role: 'roleTroopLeader',
+          imageUrl: 'https://placehold.co/400x400.png',
+          dataAiHint: 'portrait man serious',
+        },
+      ],
       assistants: [
-        { name: 'امجد', role: 'roleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait man glasses' },
+        { id: ++personId, name: 'امجد مهدي مرغني', role: 'roleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait man glasses' },
       ],
     },
     {
-      troopNameKey: 'troopAdvanced',
-      leader: {
-        name: 'عثمان',
-        role: 'roleTroopLeader',
-        imageUrl: 'https://placehold.co/400x400.png',
-        dataAiHint: 'portrait man beard',
-      },
+      troopNameKey: 'troopCubScouts',
+      leaders: [
+        {
+          id: ++personId,
+          name: 'مازن صبري حسن',
+          role: 'roleTroopLeader',
+          imageUrl: 'https://placehold.co/400x400.png',
+          dataAiHint: 'portrait man smiling',
+        },
+      ],
       assistants: [
-        { name: 'محمد حسن', role: 'roleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait man' },
-        { name: 'عبدالرحمن', role: 'roleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait man professional' },
+        { id: ++personId, name: 'عثمان عماد الدين', role: 'roleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait man' },
       ],
     },
     {
-        troopNameKey: 'troopBrownies',
-        leader: {
-          name: 'حليمه',
+      troopNameKey: 'troopAdvancedGuides',
+      leaders: [
+        {
+          id: ++personId,
+          name: 'ماجدة عبدالله عبيد',
           role: 'roleFemaleTroopLeader',
           imageUrl: 'https://placehold.co/400x400.png',
-          dataAiHint: 'portrait woman smiling',
+          dataAiHint: 'portrait woman',
         },
-        assistants: [
-          { name: 'بسمله', role: 'roleFemaleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait woman young' },
-        ],
-    },
-    {
-        troopNameKey: 'troopGirlGuides',
-        leader: {
-          name: 'ايمان',
-          role: 'roleFemaleTroopLeader',
-          imageUrl: 'https://placehold.co/400x400.png',
-          dataAiHint: 'portrait woman professional',
-        },
-        assistants: [
-          { name: 'رتاج', role: 'roleFemaleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait woman' },
-          { name: 'يمنى', role: 'roleFemaleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait woman glasses' },
-        ],
-    },
-     {
-        troopNameKey: 'troopAdvancedGuides',
-        leader: {
-          name: 'مها',
+        {
+          id: ++personId,
+          name: 'مها شمس الفلاح',
           role: 'roleFemaleTroopLeader',
           imageUrl: 'https://placehold.co/400x400.png',
           dataAiHint: 'portrait woman serious',
         },
-        assistants: [
-          { name: 'ماجده', role: 'roleFemaleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait woman' },
-          { name: 'روان', role: 'roleFemaleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait woman young' },
-        ],
+      ],
+      assistants: [
+        { id: ++personId, name: 'روان ولي الدين', role: 'roleFemaleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait woman young' },
+      ],
+    },
+    {
+      troopNameKey: 'troopGirlGuides',
+      leaders: [
+        {
+          id: ++personId,
+          name: 'إيمان المليح ابراهيم',
+          role: 'roleFemaleTroopLeader',
+          imageUrl: 'https://placehold.co/400x400.png',
+          dataAiHint: 'portrait woman professional',
+        },
+      ],
+      assistants: [
+        { id: ++personId, name: 'رتاج حيدر محمد', role: 'roleFemaleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait woman' },
+        { id: ++personId, name: 'يمنى الطاهر امين', role: 'roleFemaleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait woman glasses' },
+      ],
+    },
+    {
+      troopNameKey: 'troopBrownies',
+      leaders: [
+        {
+          id: ++personId,
+          name: 'خديجة ابوبكر هارون',
+          role: 'roleFemaleTroopLeader',
+          imageUrl: 'https://placehold.co/400x400.png',
+          dataAiHint: 'portrait woman smiling',
+        },
+      ],
+      assistants: [
+        { id: ++personId, name: 'بسملة ايهاب', role: 'roleFemaleTroopAssistant', imageUrl: 'https://placehold.co/400x400.png', dataAiHint: 'portrait woman young' },
+      ],
     },
   ],
 };
@@ -234,7 +262,7 @@ export default function AboutPage() {
             <h3 className="text-2xl font-bold font-headline text-center text-secondary-foreground mb-6">{t('about.commandTitle')}</h3>
             <div className="flex justify-center gap-8 flex-wrap">
               {leadership.command.map(leader => (
-                  <div key={leader.name} className="w-full max-w-sm">
+                  <div key={leader.id} className="w-full max-w-sm">
                     <LeaderCard person={leader} t={t} />
                   </div>
               ))}
@@ -250,12 +278,14 @@ export default function AboutPage() {
                 <div key={troop.troopNameKey}>
                   <h4 className="text-xl font-bold font-headline text-center text-primary mb-6">{t(`about.${troop.troopNameKey}`)}</h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-                    <div className="md:col-span-1 flex justify-center">
-                      <LeaderCard person={troop.leader} t={t} />
+                    <div className="md:col-span-1 flex flex-col items-center gap-8">
+                      {(troop.leaders || []).map(leader => (
+                        <LeaderCard key={leader.id} person={leader} t={t} />
+                      ))}
                     </div>
                     <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-8">
-                      {troop.assistants.map(assistant => (
-                        <LeaderCard key={assistant.name} person={assistant} t={t} />
+                      {(troop.assistants || []).map(assistant => (
+                        <LeaderCard key={assistant.id} person={assistant} t={t} />
                       ))}
                     </div>
                   </div>
