@@ -144,23 +144,16 @@ export default function AllMembersView() {
 
     setIsImporting(true);
     try {
-      const existingScoutsSnapshot = await getDocs(query(collection(db, 'scouts')));
-      const existingScoutIds = new Set(existingScoutsSnapshot.docs.map(docData => docData.id));
-
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
         complete: async (results) => {
-          const batch = writeBatch(db);
-          let successCount = 0;
-          let skippedCount = 0;
-          let errorCount = 0;
-          
+          // Step 1: Group all rows by member ID to build complete member objects
           const membersData = new Map<string, any>();
-
           for (const row of results.data as any[]) {
-            if (!row.id) continue;
+            if (!row.id) continue; // Skip rows without an ID
 
+            // If we haven't seen this member ID yet, create their base profile
             if (!membersData.has(row.id)) {
               membersData.set(row.id, {
                 id: row.id,
@@ -172,29 +165,37 @@ export default function AllMembersView() {
                 payments: [],
               });
             }
-
+            
+            // Add payment record to the corresponding member
+            const member = membersData.get(row.id);
             if (row.payment_month && row.payment_amount && row.payment_status) {
-              const member = membersData.get(row.id);
-              if (member) {
-                  member.payments.push({
-                    month: row.payment_month,
-                    amount: parseFloat(row.payment_amount),
-                    status: row.payment_status,
-                    datePaid: row.payment_datePaid || null,
-                  });
-              }
+              member.payments.push({
+                month: row.payment_month,
+                amount: parseFloat(row.payment_amount),
+                status: row.payment_status,
+                datePaid: row.payment_datePaid || null,
+              });
             }
           }
-          
+
+          // Step 2: Check against Firestore and prepare batch write for NEW members only
+          const existingScoutsSnapshot = await getDocs(query(collection(db, 'scouts')));
+          const existingScoutIds = new Set(existingScoutsSnapshot.docs.map(docData => docData.id));
+          const batch = writeBatch(db);
+          let successCount = 0;
+          let skippedCount = 0;
+          let errorCount = 0;
+
           for (const [id, scoutData] of membersData.entries()) {
+            // If the member ID from the CSV already exists in the database, skip them.
+            if (existingScoutIds.has(id)) {
+              skippedCount++;
+              continue;
+            }
+
             try {
-              if (existingScoutIds.has(id)) {
-                skippedCount++;
-                continue;
-              }
-              
+              // Validate the complete member object
               const validatedData = scoutSchema.parse(scoutData);
-              
               const scoutRef = doc(db, 'scouts', validatedData.id);
               const { id: scoutId, ...savableData } = validatedData;
               batch.set(scoutRef, savableData);
@@ -215,7 +216,7 @@ export default function AllMembersView() {
           });
           
           if (successCount > 0) {
-            fetchScouts();
+            await fetchScouts(); // Refresh the list to show newly imported members
           }
         },
         error: (error: any) => { throw new Error(error.message); }
