@@ -238,6 +238,7 @@ export default {
     statusDue: 'مستحق',
     statusPaid: 'مدفوع',
     addPayment: 'إضافة دفعة',
+    noPaymentsYet: 'لا توجد سجلات دفع لهذا العضو. انقر على "إضافة دفعة" لإنشاء أول سجل.',
     saving: 'جاري الحفظ...',
     saveChanges: 'حفظ التغييرات',
     createMember: 'إنشاء عضو',

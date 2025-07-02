@@ -135,7 +135,7 @@ export default {
   cart: {
     title: 'Your Shopping Cart',
     emptyTitle: 'Your Cart is Empty',
-    emptySubtitle: 'Looks like you haven\'t added anything to your cart yet.',
+    emptySubtitle: 'Looks like you\'t added anything to your cart yet.',
     continueShopping: 'Continue Shopping',
     orderSummary: 'Order Summary',
     subtotal: 'Subtotal',
@@ -238,6 +238,7 @@ export default {
     statusDue: 'Due',
     statusPaid: 'Paid',
     addPayment: 'Add Payment',
+    noPaymentsYet: "No payment records exist. Click 'Add Payment' to create one.",
     saving: 'Saving...',
     saveChanges: 'Save Changes',
     createMember: 'Create Member',
