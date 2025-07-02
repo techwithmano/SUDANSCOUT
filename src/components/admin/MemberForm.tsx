@@ -86,12 +86,7 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
     }
     
     try {
-      const scoutData = {
-        ...data,
-        imageUrl: data.imageUrl || "https://placehold.co/400x400.png",
-      };
-
-      const { id, ...savableData } = scoutData;
+      const { id, ...savableData } = data;
       
       if (isEditMode && scout) {
         const scoutRef = doc(db, 'scouts', scout.id);
