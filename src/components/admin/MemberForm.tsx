@@ -18,6 +18,7 @@ import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { useTranslation } from "@/context/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import translations from "@/locales";
 
 type ScoutFormValues = z.infer<typeof scoutSchema>;
 
@@ -32,6 +33,16 @@ const groups = [
   'troopAdvanced', 'troopBoyScouts', 'troopCubScouts', 
   'troopAdvancedGuides', 'troopGirlGuides', 'troopBrownies'
 ];
+
+// This map helps convert old, translated group names back to their consistent keys.
+const groupTranslationMap: { [key: string]: string } = {};
+groups.forEach(key => {
+    const enValue = translations.en.about[key as keyof typeof translations.en.about];
+    const arValue = translations.ar.about[key as keyof typeof translations.ar.about];
+    if (enValue) groupTranslationMap[enValue] = key;
+    if (arValue) groupTranslationMap[arValue] = key;
+});
+
 
 export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
   const { t } = useTranslation();
@@ -54,8 +65,14 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
 
   useEffect(() => {
     if (scout) {
+      const groupValue = scout.group || '';
+      // Handle backward compatibility: if the stored group is a translated name, map it to its key.
+      // If it's already a key, this will use it directly.
+      const groupKey = groupTranslationMap[groupValue] || groupValue;
+      
       form.reset({
         ...scout,
+        group: groupKey,
         imageUrl: scout.imageUrl === 'https://placehold.co/400x400.png' ? '' : scout.imageUrl,
       });
     } else {
@@ -156,7 +173,7 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{t('admin.group')}</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder={t('admin.selectGroup')} />
@@ -164,7 +181,7 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
                   </FormControl>
                   <SelectContent>
                     {groups.map(groupKey => (
-                      <SelectItem key={groupKey} value={t(`about.${groupKey}`)}>
+                      <SelectItem key={groupKey} value={groupKey}>
                         {t(`about.${groupKey}`)}
                       </SelectItem>
                     ))}

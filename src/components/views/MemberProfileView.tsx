@@ -45,6 +45,14 @@ export default function MemberProfileView({ scout }: { scout: Scout }) {
     return date.toLocaleDateString(targetLocale, options);
   };
 
+  const getDisplayedGroup = (groupValue: string) => {
+    const groupKeys = ['troopAdvanced', 'troopBoyScouts', 'troopCubScouts', 'troopAdvancedGuides', 'troopGirlGuides', 'troopBrownies'];
+    if (groupValue && groupKeys.includes(groupValue)) {
+        return t(`about.${groupValue}`);
+    }
+    return groupValue; // It's an old, already-translated value, so just display it.
+  };
+
   return (
     <div className="container mx-auto px-4 py-16">
       <Card className="overflow-hidden shadow-lg">
@@ -82,7 +90,7 @@ export default function MemberProfileView({ scout }: { scout: Scout }) {
                     <Users className="h-6 w-6 text-primary" />
                     <div>
                         <p className="font-semibold">{t('memberProfile.group')}</p>
-                        <p className="text-muted-foreground">{scout.group}</p>
+                        <p className="text-muted-foreground">{getDisplayedGroup(scout.group || '')}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-secondary rounded-lg">

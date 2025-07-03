@@ -119,7 +119,7 @@ export default function AllMembersView() {
         fullName: scout.fullName,
         dateOfBirth: formatDateForExport(scout.dateOfBirth),
         address: scout.address,
-        group: scout.group,
+        group: getDisplayedGroup(scout.group || ''), // Use helper to get translated name
         imageUrl: scout.imageUrl,
       };
 
@@ -291,6 +291,14 @@ export default function AllMembersView() {
     return name.substring(0, 2);
   };
 
+  const getDisplayedGroup = (groupValue: string) => {
+    const groupKeys = ['troopAdvanced', 'troopBoyScouts', 'troopCubScouts', 'troopAdvancedGuides', 'troopGirlGuides', 'troopBrownies'];
+    if (groupValue && groupKeys.includes(groupValue)) {
+        return t(`about.${groupValue}`);
+    }
+    return groupValue;
+  };
+
   if (isLoading) {
     return (
         <div className="container mx-auto px-4 py-16">
@@ -358,7 +366,7 @@ export default function AllMembersView() {
                           </Link>
                         </TableCell>
                         <TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{scout.id}</TableCell>
-                        <TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{scout.group}</TableCell>
+                        <TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{getDisplayedGroup(scout.group || '')}</TableCell>
                         <TableCell className={cn(locale === 'ar' ? 'text-left' : 'text-right')}>
                           <div className="flex gap-2 justify-end">
                               <Button variant="outline" size="icon" onClick={() => handleEdit(scout)}>
