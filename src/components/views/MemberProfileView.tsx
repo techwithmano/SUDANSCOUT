@@ -15,6 +15,8 @@ import type { Scout } from "@/lib/data";
 
 const ADMIN_EMAIL = 'sudanscoutadmin@scout.com';
 
+const groupKeys = ['troopAdvanced', 'troopBoyScouts', 'troopCubScouts', 'troopAdvancedGuides', 'troopGirlGuides', 'troopBrownies'];
+
 export default function MemberProfileView({ scout }: { scout: Scout }) {
   const { t, locale } = useTranslation();
   const { user } = useAuth();
@@ -46,7 +48,6 @@ export default function MemberProfileView({ scout }: { scout: Scout }) {
   };
 
   const getDisplayedGroup = (groupValue: string) => {
-    const groupKeys = ['troopAdvanced', 'troopBoyScouts', 'troopCubScouts', 'troopAdvancedGuides', 'troopGirlGuides', 'troopBrownies'];
     if (groupValue && groupKeys.includes(groupValue)) {
         return t(`about.${groupValue}`);
     }
