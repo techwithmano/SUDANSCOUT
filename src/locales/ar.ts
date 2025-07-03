@@ -114,7 +114,7 @@ export default {
     checkoutAddress: 'العنوان',
     checkoutPhone: 'رقم الهاتف',
     checkoutEmail: 'البريد الإلكتروني',
-    checkoutScoutId: 'معرف الكشاف (اختياري)',
+    checkoutScoutId: 'الهوية الكشفية (اختياري)',
     checkoutFirstNamePlaceholder: 'فلان',
     checkoutLastNamePlaceholder: 'الفلاني',
     checkoutAddressPlaceholder: '123 الشارع الرئيسي، أي مدينة',
@@ -153,15 +153,15 @@ export default {
   // Members Page
   members: {
     portalTitle: 'بوابة الأعضاء',
-    portalSubtitle: 'أدخل معرف الكشاف الخاص بك لعرض ملفك الشخصي وحالة الدفع والمزيد.',
+    portalSubtitle: 'أدخل هويتك الكشفية لعرض ملفك الشخصي وحالة الدفع والمزيد.',
     searchTitle: 'ابحث عن ملفك الشخصي',
-    searchSubtitle: 'الرجاء إدخال معرف الكشاف الخاص بك أدناه.',
-    scoutId: 'معرف الكشاف',
+    searchSubtitle: 'الرجاء إدخال هويتك الكشفية أدناه.',
+    scoutId: 'الهوية الكشفية',
     search: 'بحث',
   },
   // Member Profile
   memberProfile: {
-    scoutId: 'معرف الكشاف',
+    scoutId: 'الهوية الكشفية',
     birthDate: 'تاريخ الميلاد',
     group: 'الفرقة',
     address: 'العنوان',
@@ -228,7 +228,7 @@ export default {
     memberName: 'اسم العضو',
     addNewMember: 'إضافة عضو جديد',
     editProfile: 'تعديل الملف الشخصي',
-    scoutId: 'معرف الكشاف',
+    scoutId: 'الهوية الكشفية',
     scoutIdHint: 'أدخل معرفًا فريدًا',
     fullName: 'الاسم الكامل',
     dob: 'تاريخ الميلاد',
@@ -284,3 +284,5 @@ export default {
     selectCsv: 'اختر ملف CSV للاستيراد',
   }
 };
+
+    
