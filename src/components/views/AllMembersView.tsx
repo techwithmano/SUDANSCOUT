@@ -19,6 +19,7 @@ import { MemberFormDialog } from "../admin/MemberFormDialog";
 import Papa from 'papaparse';
 import { cn } from "@/lib/utils";
 import translations from "@/locales";
+import { z } from "zod";
 
 // This map helps find the correct internal group key (e.g., 'troopBoyScouts')
 // from a display value in either English or Arabic (e.g., "Boy Scouts Troop" or "فرقة الفتيان").
@@ -49,6 +50,11 @@ const getGroupKey = (groupValue: string | undefined): string => {
     if (!groupValue) return '';
     return groupKeyMap[String(groupValue).toLowerCase().trim()] || String(groupValue);
 };
+
+// Create a more lenient schema specifically for importing, allowing empty addresses.
+const importScoutSchema = scoutSchema.extend({
+  address: z.string(), // Override address to allow empty strings during import
+});
 
 export default function AllMembersView() {
   const { t, locale } = useTranslation();
@@ -256,7 +262,7 @@ export default function AllMembersView() {
 
                 for (const scoutData of membersToUpsert) {
                   try {
-                    const validatedData = scoutSchema.parse(scoutData);
+                    const validatedData = importScoutSchema.parse(scoutData);
                     const scoutRef = doc(db, 'scouts', validatedData.id);
                     const { id, ...savableData } = validatedData;
                     batch.set(scoutRef, savableData, { merge: true });
