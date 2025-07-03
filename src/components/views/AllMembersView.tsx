@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { collection, getDocs, query, deleteDoc, doc, writeBatch } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { MemberFormDialog } from "../admin/MemberFormDialog";
-import * as xlsx from 'xlsx';
+import Papa from 'papaparse';
 import { cn } from "@/lib/utils";
 
 const ADMIN_EMAIL = 'sudanscoutadmin@scout.com';
@@ -98,7 +98,7 @@ export default function AllMembersView() {
     return `${day}/${month}/${year}`;
   };
 
-  const handleExportExcel = () => {
+  const handleExportCsv = () => {
     const maxPayments = scouts.reduce((max, scout) => {
       const numPayments = scout.payments?.length || 0;
       return numPayments > max ? numPayments : max;
@@ -134,47 +134,16 @@ export default function AllMembersView() {
       return row;
     });
 
-    const worksheet = xlsx.utils.json_to_sheet(dataToExport, { header: headers });
-    
-    // Add data validations
-    const groupOptions = [
-      t('about.troopAdvanced'), t('about.troopBoyScouts'), t('about.troopCubScouts'),
-      t('about.troopAdvancedGuides'), t('about.troopGirlGuides'), t('about.troopBrownies')
-    ].join(',');
-
-    const paymentStatusOptions = [t('admin.statusPaid', undefined, {lng: 'ar'}), t('admin.statusDue', undefined, {lng: 'ar'})].join(',');
-
-    const addValidation = (col: string, formula: string) => {
-       for (let i = 2; i <= dataToExport.length + 1; i++) { // +1 for header row
-         const cellAddress = `${col}${i}`;
-         if(!worksheet[cellAddress]) worksheet[cellAddress] = { t: 's', v: undefined };
-         worksheet[cellAddress].s = {
-           dataValidation: {
-             type: 'list',
-             allowBlank: true,
-             formula1: `"${formula}"`,
-             showDropDown: true,
-             errorStyle: 'stop',
-             errorTitle: locale === 'ar' ? 'قيمة غير صالحة' : 'Invalid Value',
-             error: locale === 'ar' ? `الرجاء الاختيار من القائمة.` : `Please select a value from the list.`,
-           }
-         }
-       }
-    };
-    
-    // Column E is 'group'
-    addValidation('E', groupOptions);
-
-    // Columns for payment status (I, L, O, ...)
-    for (let i = 0; i < maxPayments; i++) {
-        const colIndex = 6 + (i * 3) + 2; // F=6, I=9, L=12
-        const colLetter = xlsx.utils.encode_col(colIndex);
-        addValidation(colLetter, paymentStatusOptions);
-    }
-
-    const workbook = xlsx.utils.book_new();
-    xlsx.utils.book_append_sheet(workbook, worksheet, 'Scouts');
-    xlsx.writeFile(workbook, 'scouts_data.xlsx');
+    const csv = Papa.unparse(dataToExport, { header: true, columns: headers });
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'scouts_data.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleImportClick = () => {
@@ -182,127 +151,134 @@ export default function AllMembersView() {
   };
 
   const parseDateFromImport = (dateValue: string | number | undefined): string => {
-    if (typeof dateValue === 'number') { // Excel date serial number
-        const date = xlsx.SSF.parse_date_code(dateValue);
-        const day = String(date.d).padStart(2, '0');
-        const month = String(date.m).padStart(2, '0');
-        const year = date.y;
-        return `${year}-${month}-${day}`;
-    }
-    if (typeof dateValue === 'string') { // DD/MM/YYYY string
-        if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dateValue)) {
-            return dateValue;
+    if (typeof dateValue === 'string') {
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateValue)) {
+            const [day, month, year] = dateValue.split('/');
+            return `${year}-${month}-${day}`;
         }
-        const [day, month, year] = dateValue.split('/');
-        return `${year}-${month}-${day}`;
     }
-    return '';
+    // Return as is if not in dd/mm/yyyy format (might already be yyyy-mm-dd)
+    return String(dateValue || '');
   };
 
-  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     setIsImporting(true);
-    try {
-      const data = await file.arrayBuffer();
-      const workbook = xlsx.read(data);
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = xlsx.utils.sheet_to_json(worksheet, { raw: false, defval: null });
 
-      const membersToUpsert: Scout[] = [];
-      for (const row of jsonData as any[]) {
-          if (!row.id) continue;
-          
-          const scoutData: any = {
-              id: String(row.id).trim(),
-              fullName: row.fullName,
-              dateOfBirth: parseDateFromImport(row.dateOfBirth),
-              address: row.address,
-              group: row.group,
-              imageUrl: row.imageUrl || '',
-              payments: [],
-          };
+    Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async (results) => {
+            try {
+                const jsonData = results.data;
+                const membersToUpsert: Scout[] = [];
 
-          let i = 1;
-          while (row[`payment_month_${i}`] !== undefined && row[`payment_month_${i}`] !== null) {
-            const rawStatus = row[`payment_status_${i}`]?.trim().toLowerCase();
-            let finalStatus: 'paid' | 'due' = 'due';
-            
-            if (rawStatus === 'مدفوع' || rawStatus === 'paid') {
-              finalStatus = 'paid';
-            } else if (rawStatus === 'مستحق' || rawStatus === 'due') {
-              finalStatus = 'due';
+                for (const row of jsonData as any[]) {
+                    if (!row.id || !String(row.id).trim()) continue;
+                    
+                    const scoutData: any = {
+                        id: String(row.id).trim(),
+                        fullName: row.fullName || '',
+                        dateOfBirth: parseDateFromImport(row.dateOfBirth),
+                        address: row.address || '',
+                        group: row.group || '',
+                        imageUrl: row.imageUrl || '',
+                        payments: [],
+                    };
+
+                    let i = 1;
+                    while (row[`payment_month_${i}`] !== undefined && row[`payment_month_${i}`] !== null) {
+                        const rawStatus = String(row[`payment_status_${i}`] || '').trim().toLowerCase();
+                        let finalStatus: 'paid' | 'due' = 'due';
+                        
+                        if (rawStatus === 'مدفوع' || rawStatus === 'paid') {
+                          finalStatus = 'paid';
+                        } else if (rawStatus === 'مستحق' || rawStatus === 'due') {
+                          finalStatus = 'due';
+                        }
+
+                        const payment = {
+                          month: row[`payment_month_${i}`],
+                          amount: parseFloat(row[`payment_amount_${i}`]) || 0,
+                          status: finalStatus,
+                        };
+                        
+                        if (payment.month) {
+                          scoutData.payments.push(payment);
+                        }
+                        i++;
+                    }
+                    membersToUpsert.push(scoutData);
+                }
+                
+                const existingScoutsSnapshot = await getDocs(query(collection(db, 'scouts')));
+                const existingScoutIds = new Set(existingScoutsSnapshot.docs.map(docData => docData.id));
+                const batch = writeBatch(db);
+                
+                let createdCount = 0;
+                let updatedCount = 0;
+                let errorCount = 0;
+
+                for (const scoutData of membersToUpsert) {
+                  try {
+                    const validatedData = scoutSchema.parse(scoutData);
+                    const scoutRef = doc(db, 'scouts', validatedData.id);
+                    const { id, ...savableData } = validatedData;
+                    batch.set(scoutRef, savableData);
+
+                    if (existingScoutIds.has(id)) {
+                      updatedCount++;
+                    } else {
+                      createdCount++;
+                    }
+                  } catch (parseError) {
+                    console.error(`Skipping invalid row data for scout ID ${scoutData.id}:`, parseError);
+                    errorCount++;
+                  }
+                }
+
+                if (createdCount + updatedCount > 0) {
+                  await batch.commit();
+                }
+
+                toast({
+                  title: t('admin.importSuccessTitle'),
+                  description: t('admin.importProcessComplete', { 
+                      createdCount: String(createdCount), 
+                      updatedCount: String(updatedCount),
+                      errorCount: String(errorCount)
+                  }),
+                });
+                
+                if (createdCount + updatedCount > 0) {
+                  await fetchScouts();
+                }
+
+            } catch (error) {
+                console.error("Import failed:", error);
+                toast({
+                    variant: 'destructive',
+                    title: t('admin.importErrorTitle'),
+                    description: t('admin.importErrorDesc', { error: error instanceof Error ? error.message : String(error) }),
+                });
+            } finally {
+                setIsImporting(false);
+                if (event.target) event.target.value = '';
             }
-
-            const payment = {
-              month: row[`payment_month_${i}`],
-              amount: parseFloat(row[`payment_amount_${i}`]) || 0,
-              status: finalStatus,
-            };
-            
-            if (payment.month) {
-              scoutData.payments.push(payment);
-            }
-            i++;
-          }
-          membersToUpsert.push(scoutData);
-      }
-      
-      const existingScoutsSnapshot = await getDocs(query(collection(db, 'scouts')));
-      const existingScoutIds = new Set(existingScoutsSnapshot.docs.map(docData => docData.id));
-      const batch = writeBatch(db);
-      
-      let createdCount = 0;
-      let updatedCount = 0;
-      let errorCount = 0;
-
-      for (const scoutData of membersToUpsert) {
-        try {
-          const validatedData = scoutSchema.parse(scoutData);
-          const scoutRef = doc(db, 'scouts', validatedData.id);
-          const { id, ...savableData } = validatedData;
-          batch.set(scoutRef, savableData);
-
-          if (existingScoutIds.has(id)) {
-            updatedCount++;
-          } else {
-            createdCount++;
-          }
-        } catch (parseError) {
-          console.error(`Skipping invalid row data for scout ID ${scoutData.id}:`, parseError);
-          errorCount++;
+        },
+        error: (error: any) => {
+            console.error("CSV Parse error:", error);
+            toast({
+                variant: 'destructive',
+                title: t('admin.importErrorTitle'),
+                description: t('admin.importErrorDesc', { error: error.message }),
+            });
+            setIsImporting(false);
+            if (event.target) event.target.value = '';
         }
-      }
-
-      if (createdCount + updatedCount > 0) {
-        await batch.commit();
-      }
-
-      toast({
-        title: t('admin.importSuccessTitle'),
-        description: t('admin.importProcessComplete', { 
-            createdCount: String(createdCount), 
-            updatedCount: String(updatedCount),
-            errorCount: String(errorCount)
-        }),
-      });
-      
-      if (createdCount + updatedCount > 0) {
-        await fetchScouts();
-      }
-
-    } catch (error) {
-      console.error("Import failed:", error);
-      toast({
-        variant: 'destructive',
-        title: t('admin.importErrorTitle'),
-        description: t('admin.importErrorDesc', { error: error instanceof Error ? error.message : String(error) }),
-      });
-    } finally {
-      setIsImporting(false);
-      if (event.target) event.target.value = '';
-    }
+    });
   };
 
 
@@ -336,7 +312,7 @@ export default function AllMembersView() {
         type="file"
         ref={fileInputRef}
         onChange={handleFileChange}
-        accept=".xlsx, .xls"
+        accept=".csv"
         className="hidden"
         aria-label={t('admin.selectCsv')}
       />
@@ -353,7 +329,7 @@ export default function AllMembersView() {
               {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
               {isImporting ? t('admin.importing') : t('admin.importData')}
             </Button>
-            <Button onClick={handleExportExcel} variant="outline"><Download className="mr-2 h-4 w-4" /> {t('admin.exportData')}</Button>
+            <Button onClick={handleExportCsv} variant="outline"><Download className="mr-2 h-4 w-4" /> {t('admin.exportData')}</Button>
             <Button onClick={handleAddNew}><UserPlus className="mr-2 h-4 w-4" />{t('admin.addNewMember')}</Button>
           </div>
         </div>
