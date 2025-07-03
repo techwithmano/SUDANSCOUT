@@ -36,11 +36,13 @@ const groups = [
 
 // This map helps convert old, translated group names back to their consistent keys.
 const groupTranslationMap: { [key: string]: string } = {};
-groups.forEach(key => {
-    const enValue = translations.en.about[key as keyof typeof translations.en.about];
-    const arValue = translations.ar.about[key as keyof typeof translations.ar.about];
-    if (enValue) groupTranslationMap[enValue] = key;
-    if (arValue) groupTranslationMap[arValue] = key;
+Object.keys(translations.en.about).forEach(key => {
+    if (groups.includes(key)) {
+        const enValue = translations.en.about[key as keyof typeof translations.en.about];
+        const arValue = translations.ar.about[key as keyof typeof translations.ar.about];
+        if (enValue) groupTranslationMap[enValue] = key;
+        if (arValue) groupTranslationMap[arValue] = key;
+    }
 });
 
 
@@ -68,10 +70,16 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
       const groupValue = scout.group || '';
       const groupKey = groupTranslationMap[groupValue] || groupValue;
       
+      const sanitizedPayments = (scout.payments || []).map(p => ({
+          month: p.month || '',
+          amount: p.amount || 0,
+          status: p.status || 'due'
+      }));
+
       form.reset({
         ...scout,
         group: groupKey,
-        payments: scout.payments || [],
+        payments: sanitizedPayments,
         imageUrl: scout.imageUrl === 'https://placehold.co/400x400.png' ? '' : scout.imageUrl,
       });
     } else {
@@ -216,9 +224,7 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
             </CardHeader>
             <CardContent className="p-2">
                 <div className="space-y-4">
-                    {fields.length === 0 ? (
-                        <p className="text-sm text-muted-foreground px-2 py-4 text-center">{t('admin.noPaymentsYet')}</p>
-                    ) : (
+                    {fields.length > 0 ? (
                         fields.map((field, index) => (
                           <div key={field.id} className="relative p-4 pt-6 border rounded-lg bg-card shadow-sm">
                             <Button
@@ -231,7 +237,7 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                               <FormField control={form.control} name={`payments.${index}.month`} render={({ field }) => (<FormItem><FormLabel>{t('admin.paymentMonth')}</FormLabel><FormControl><Input {...field} placeholder={t('admin.paymentMonthHint')} /></FormControl><FormMessage /></FormItem>)} />
                               <FormField control={form.control} name={`payments.${index}.amount`} render={({ field }) => (<FormItem><FormLabel>{t('admin.paymentAmount')}</FormLabel><FormControl><Input type="number" step="0.001" {...field} /></FormControl><FormMessage /></FormItem>)} />
                               <FormField control={form.control} name={`payments.${index}.status`} render={({ field }) => (
@@ -254,6 +260,8 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
                             </div>
                           </div>
                         ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground px-2 py-4 text-center">{t('admin.noPaymentsYet')}</p>
                     )}
                     <Button type="button" variant="outline" size="sm" onClick={() => append({ month: "", amount: 20, status: "due" })} className="mt-4"><PlusCircle className="mr-2 h-4 w-4" /> {t('admin.addPayment')}</Button>
                 </div>
