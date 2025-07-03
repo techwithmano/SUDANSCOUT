@@ -66,13 +66,12 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
   useEffect(() => {
     if (scout) {
       const groupValue = scout.group || '';
-      // Handle backward compatibility: if the stored group is a translated name, map it to its key.
-      // If it's already a key, this will use it directly.
       const groupKey = groupTranslationMap[groupValue] || groupValue;
       
       form.reset({
         ...scout,
         group: groupKey,
+        payments: scout.payments || [],
         imageUrl: scout.imageUrl === 'https://placehold.co/400x400.png' ? '' : scout.imageUrl,
       });
     } else {
@@ -86,7 +85,7 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
         payments: [],
       });
     }
-  }, [scout, form]);
+  }, [scout, form.reset]);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -221,31 +220,42 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
                         <p className="text-sm text-muted-foreground px-2 py-4 text-center">{t('admin.noPaymentsYet')}</p>
                     ) : (
                         fields.map((field, index) => (
-                            <div key={field.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end p-4 border rounded-lg bg-card">
-                                <FormField control={form.control} name={`payments.${index}.month`} render={({ field }) => (<FormItem><FormLabel>{t('admin.paymentMonth')}</FormLabel><FormControl><Input {...field} placeholder={t('admin.paymentMonthHint')} /></FormControl><FormMessage /></FormItem>)} />
-                                <FormField control={form.control} name={`payments.${index}.amount`} render={({ field }) => (<FormItem><FormLabel>{t('admin.paymentAmount')}</FormLabel><FormControl><Input type="number" step="0.001" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                                <FormField control={form.control} name={`payments.${index}.status`} render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>{t('admin.paymentStatus')}</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                            <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder={t('admin.selectStatus')} />
-                                            </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                <SelectItem value="due">{t('admin.statusDue')}</SelectItem>
-                                                <SelectItem value="paid">{t('admin.statusPaid')}</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )} />
-                                <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4" /></Button>
+                          <div key={field.id} className="relative p-4 pt-6 border rounded-lg bg-card shadow-sm">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => remove(index)}
+                              className="absolute top-1 right-1 h-7 w-7 text-destructive hover:bg-destructive/10"
+                              aria-label="Remove payment"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                              <FormField control={form.control} name={`payments.${index}.month`} render={({ field }) => (<FormItem><FormLabel>{t('admin.paymentMonth')}</FormLabel><FormControl><Input {...field} placeholder={t('admin.paymentMonthHint')} /></FormControl><FormMessage /></FormItem>)} />
+                              <FormField control={form.control} name={`payments.${index}.amount`} render={({ field }) => (<FormItem><FormLabel>{t('admin.paymentAmount')}</FormLabel><FormControl><Input type="number" step="0.001" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                              <FormField control={form.control} name={`payments.${index}.status`} render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>{t('admin.paymentStatus')}</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder={t('admin.selectStatus')} />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="due">{t('admin.statusDue')}</SelectItem>
+                                      <SelectItem value="paid">{t('admin.statusPaid')}</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )} />
                             </div>
+                          </div>
                         ))
                     )}
-                    <Button type="button" variant="outline" size="sm" onClick={() => append({ month: "", amount: 20, status: "due" })}><PlusCircle className="mr-2 h-4 w-4" /> {t('admin.addPayment')}</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => append({ month: "", amount: 20, status: "due" })} className="mt-4"><PlusCircle className="mr-2 h-4 w-4" /> {t('admin.addPayment')}</Button>
                 </div>
             </CardContent>
         </Card>
