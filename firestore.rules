@@ -1,18 +1,46 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow public read access to products, but only admins can write.
-    match /products/{productId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.token.email == 'sudanscoutadmin@scout.com';
+  
+    // Helper function to get the user's role from the 'admins' collection.
+    // It's safe because the rule for the 'admins' collection below only allows a user to read their own document.
+    function getUserRole() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role;
     }
-
-    // Allow public read access to scout profiles, but only admins can write.
+    
+    // Admins collection: Authenticated users can only read their own role document.
+    // Writing should only be done from the Firebase Console, so we restrict it here.
+    match /admins/{userId} {
+      allow get: if request.auth != null && request.auth.uid == userId;
+      allow list, write: if false; // Disallow listing or writing from the client-side.
+    }
+    
+    // Scouts collection:
     match /scouts/{scoutId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.token.email == 'sudanscoutadmin@scout.com';
+      // Any user (even unauthenticated) can get a specific scout document by their ID. This is for the public member portal.
+      allow get: if true; 
+      
+      // Allow listing, creating, updating, and deleting only for the correct admin roles.
+      allow list, create, update, delete: if request.auth != null && (getUserRole() in ['general', 'finance', 'custodian']);
+    }
+    
+    // Products collection:
+    match /products/{productId} {
+      // Anyone can read products for the public store.
+      allow get, list: if true;
+      
+      // Allow creating, updating, and deleting only for the correct admin roles.
+      allow create, update, delete: if request.auth != null && (getUserRole() in ['general', 'finance', 'custodian']);
+    }
+    
+    // Posts collection:
+    match /posts/{postId} {
+      // Anyone can read posts for the public activities page.
+      allow get, list: if true;
+      
+      // Allow creating, updating, and deleting only for 'general' and 'media' admins.
+      allow create, update, delete: if request.auth != null && (getUserRole() in ['general', 'media']);
     }
   }
 }
