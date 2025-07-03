@@ -23,7 +23,7 @@ export function PaymentSection({ scout }: { scout: Scout }) {
         messageBody = `*إشعار دفع رسوم كشفية*\n\n`;
         messageBody += `*تفاصيل العضو:*\n`;
         messageBody += `- الاسم: ${scout.fullName}\n`;
-        messageBody += `- معرف الكشاف: ${scout.id}\n`;
+        messageBody += `- الهوية الكشفية: ${scout.id}\n`;
         messageBody += `- الفرقة: ${scout.group}\n`;
         messageBody += `- العنوان: ${scout.address}\n\n`;
         
@@ -53,18 +53,18 @@ export function PaymentSection({ scout }: { scout: Scout }) {
       <Table>
         <TableHeader>
           <TableRow className="bg-muted hover:bg-muted">
-            <TableHead className="font-semibold">{t('memberProfile.month')}</TableHead>
-            <TableHead className="font-semibold">{t('memberProfile.amount')}</TableHead>
-            <TableHead className="font-semibold">{t('memberProfile.status')}</TableHead>
-            <TableHead className="font-semibold text-right">{t('memberProfile.action')}</TableHead>
+            <TableHead className={cn("font-semibold", locale === 'ar' ? 'text-right' : 'text-left')}>{t('memberProfile.month')}</TableHead>
+            <TableHead className={cn("font-semibold", locale === 'ar' ? 'text-right' : 'text-left')}>{t('memberProfile.amount')}</TableHead>
+            <TableHead className={cn("font-semibold", locale === 'ar' ? 'text-right' : 'text-left')}>{t('memberProfile.status')}</TableHead>
+            <TableHead className={cn("font-semibold", locale === 'ar' ? 'text-left' : 'text-right')}>{t('memberProfile.action')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {currentPayments.map((payment, index) => (
             <TableRow key={`${payment.month}-${index}`} className={cn(payment.status === 'paid' && 'bg-primary/5')}>
-              <TableCell className="font-medium">{payment.month}</TableCell>
-              <TableCell>{(payment.amount || 0).toFixed(3)} KWD</TableCell>
-              <TableCell>
+              <TableCell className={cn("font-medium", locale === 'ar' ? 'text-right' : 'text-left')}>{payment.month}</TableCell>
+              <TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{(payment.amount || 0).toFixed(3)} KWD</TableCell>
+              <TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>
                 <Badge
                   variant={payment.status === 'paid' ? 'default' : 'secondary'}
                   className={cn(
@@ -75,7 +75,7 @@ export function PaymentSection({ scout }: { scout: Scout }) {
                   {payment.status === 'paid' ? t('memberProfile.paid') : t('memberProfile.due')}
                 </Badge>
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className={cn(locale === 'ar' ? 'text-left' : 'text-right')}>
                 {payment.status === "due" ? (
                   <Button 
                     size="sm" 

@@ -13,11 +13,12 @@ import type { Product } from '@/lib/data';
 import { PlusCircle, Trash2, Loader2, ShieldCheck, Edit } from 'lucide-react';
 import Image from 'next/image';
 import { ProductFormDialog } from '@/components/admin/ProductFormDialog';
+import { cn } from '@/lib/utils';
 
 const ADMIN_EMAIL = 'sudanscoutadmin@scout.com';
 
 export default function AdminProductsPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -115,22 +116,22 @@ export default function AdminProductsPage() {
               <Table>
                   <TableHeader>
                       <TableRow>
-                          <TableHead>{t('admin.product')}</TableHead>
-                          <TableHead>{t('admin.category')}</TableHead>
-                          <TableHead>{t('admin.price')}</TableHead>
-                          <TableHead className="text-right">{t('memberProfile.action')}</TableHead>
+                          <TableHead className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{t('admin.product')}</TableHead>
+                          <TableHead className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{t('admin.category')}</TableHead>
+                          <TableHead className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{t('admin.price')}</TableHead>
+                          <TableHead className={cn(locale === 'ar' ? 'text-left' : 'text-right')}>{t('memberProfile.action')}</TableHead>
                       </TableRow>
                   </TableHeader>
                   <TableBody>
                       {products.map((product) => (
                           <TableRow key={product.id}>
-                              <TableCell className="font-medium flex items-center gap-3">
+                              <TableCell className={cn("font-medium flex items-center gap-3", locale === 'ar' ? 'text-right' : 'text-left')}>
                                   <Image src={product.imageUrl} alt={product.name_en || product.aiHint} width={40} height={40} className="rounded-sm object-cover" />
                                   <span>{product.name_en} / {product.name_ar}</span>
                               </TableCell>
-                              <TableCell>{t(`admin.category${product.category.charAt(0).toUpperCase() + product.category.slice(1)}`)}</TableCell>
-                              <TableCell>{product.price.toFixed(3)} KWD</TableCell>
-                              <TableCell className="text-right">
+                              <TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{t(`admin.category${product.category.charAt(0).toUpperCase() + product.category.slice(1)}`)}</TableCell>
+                              <TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{product.price.toFixed(3)} KWD</TableCell>
+                              <TableCell className={cn(locale === 'ar' ? 'text-left' : 'text-right')}>
                                 <div className="flex gap-2 justify-end">
                                     <Button variant="outline" size="icon" onClick={() => handleEdit(product)}>
                                         <Edit className="h-4 w-4" />

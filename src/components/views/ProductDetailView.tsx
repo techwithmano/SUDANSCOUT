@@ -11,6 +11,7 @@ import { useCart } from '@/context/CartContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Ruler, ShoppingCart } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const SIZES = ["S", "M", "L", "XL", "XXL"];
 
@@ -90,17 +91,17 @@ export default function ProductDetailView({ product }: { product: Product }) {
               <Table className="mt-4">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('product.size')}</TableHead>
-                    <TableHead>{t('product.chest')}</TableHead>
-                    <TableHead>{t('product.length')}</TableHead>
+                    <TableHead className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{t('product.size')}</TableHead>
+                    <TableHead className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{t('product.chest')}</TableHead>
+                    <TableHead className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{t('product.length')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <TableRow><TableCell>S</TableCell><TableCell>34-36"</TableCell><TableCell>28"</TableCell></TableRow>
-                  <TableRow><TableCell>M</TableCell><TableCell>38-40"</TableCell><TableCell>29"</TableCell></TableRow>
-                  <TableRow><TableCell>L</TableCell><TableCell>42-44"</TableCell><TableCell>30"</TableCell></TableRow>
-                  <TableRow><TableCell>XL</TableCell><TableCell>46-48"</TableCell><TableCell>31"</TableCell></TableRow>
-                  <TableRow><TableCell>XXL</TableCell><TableCell>50-52"</TableCell><TableCell>32"</TableCell></TableRow>
+                  <TableRow><TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>S</TableCell><TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>34-36"</TableCell><TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>28"</TableCell></TableRow>
+                  <TableRow><TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>M</TableCell><TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>38-40"</TableCell><TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>29"</TableCell></TableRow>
+                  <TableRow><TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>L</TableCell><TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>42-44"</TableCell><TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>30"</TableCell></TableRow>
+                  <TableRow><TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>XL</TableCell><TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>46-48"</TableCell><TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>31"</TableCell></TableRow>
+                  <TableRow><TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>XXL</TableCell><TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>50-52"</TableCell><TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>32"</TableCell></TableRow>
                 </TableBody>
               </Table>
             </div>
