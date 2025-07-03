@@ -163,7 +163,7 @@ export default {
   memberProfile: {
     scoutId: 'Scout ID',
     birthDate: 'Birth Date',
-    group: 'Group (الفرقة)',
+    group: 'Group',
     address: 'Address',
     paymentStatus: 'Payment Status',
     month: 'Month',
