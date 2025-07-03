@@ -12,7 +12,7 @@ import { ShieldCheck } from "lucide-react";
 export default function StoreView({ products }: { products: Product[] }) {
   const { t } = useTranslation();
   const { role } = useAuth();
-  const canManageStore = role === 'general' || role === 'finance';
+  const canManageStore = role === 'general' || role === 'finance' || role === 'custodian';
 
   return (
     <div className="container mx-auto px-4 py-16">

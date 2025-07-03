@@ -18,7 +18,7 @@ const groupKeys = ['troopAdvanced', 'troopBoyScouts', 'troopCubScouts', 'troopAd
 export default function MemberProfileView({ scout }: { scout: Scout }) {
   const { t, locale } = useTranslation();
   const { role } = useAuth();
-  const isAdmin = role === 'general' || role === 'finance';
+  const isAdmin = role === 'general' || role === 'finance' || role === 'custodian';
 
   if (!scout) {
     notFound();

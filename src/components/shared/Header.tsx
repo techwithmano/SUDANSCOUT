@@ -98,7 +98,7 @@ export function Header() {
                   <DropdownMenuContent align="end">
                       <DropdownMenuLabel>{t('admin.adminMenu')}</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      {(role === 'general' || role === 'finance') && (
+                      {(role === 'general' || role === 'finance' || role === 'custodian') && (
                         <>
                           <DropdownMenuItem asChild><Link href="/members"><Users className="mr-2 h-4 w-4" />{t('admin.allMembersTitle')}</Link></DropdownMenuItem>
                           <DropdownMenuItem asChild><Link href="/admin/products"><Package className="mr-2 h-4 w-4" />{t('admin.manageProducts')}</Link></DropdownMenuItem>

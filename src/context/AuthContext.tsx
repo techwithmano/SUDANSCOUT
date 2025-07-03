@@ -7,7 +7,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export type UserRole = 'general' | 'finance' | 'media' | null;
+export type UserRole = 'general' | 'finance' | 'media' | 'custodian' | null;
 
 interface AuthContextType {
   user: User | null;

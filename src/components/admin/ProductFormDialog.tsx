@@ -34,7 +34,7 @@ export function ProductFormDialog({ isOpen, onClose, product }: ProductFormDialo
   const { role } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditMode = !!product;
-  const canManage = role === 'general' || role === 'finance';
+  const canManage = role === 'general' || role === 'finance' || role === 'custodian';
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),

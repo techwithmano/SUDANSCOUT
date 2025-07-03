@@ -20,7 +20,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     // Redirect logged-in admins away from the login page
     if (isLoginPage && isAdmin) {
       if (role === 'media') return router.push('/admin/activities');
-      // Default for 'general' and 'finance'
+      // Default for 'general', 'finance', and 'custodian'
       return router.push('/members');
     }
 
@@ -34,7 +34,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       const isFinancePage = pathname.startsWith('/members') || pathname.startsWith('/admin/members') || pathname.startsWith('/admin/products');
       const isMediaPage = pathname.startsWith('/admin/activities');
       
-      const canAccessFinance = role === 'general' || role === 'finance';
+      const canAccessFinance = role === 'general' || role === 'finance' || role === 'custodian';
       const canAccessMedia = role === 'general' || role === 'media';
 
       if (isFinancePage && !canAccessFinance) {

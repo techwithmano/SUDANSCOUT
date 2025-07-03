@@ -30,7 +30,7 @@ export default function AllMembersView() {
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const canManageMembers = role === 'general' || role === 'finance';
+  const canManageMembers = role === 'general' || role === 'finance' || role === 'custodian';
 
   const fetchScouts = async () => {
     setIsLoading(true);

@@ -25,7 +25,7 @@ export default function AdminProductsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
-  const canManage = role === 'general' || role === 'finance';
+  const canManage = role === 'general' || role === 'finance' || role === 'custodian';
 
   async function fetchProducts() {
     setIsLoading(true);
