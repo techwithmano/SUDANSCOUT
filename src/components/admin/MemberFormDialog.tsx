@@ -21,6 +21,8 @@ export function MemberFormDialog({ isOpen, onClose, scout }: MemberFormDialogPro
     onClose(true); // Signal that a save happened and close dialog
   };
 
+  if (!isOpen) return null;
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose(false)}>
       <DialogContent className="sm:max-w-[800px]">
@@ -33,7 +35,7 @@ export function MemberFormDialog({ isOpen, onClose, scout }: MemberFormDialogPro
           </DialogDescription>
         </DialogHeader>
         <div className="max-h-[70vh] overflow-y-auto p-1 pr-4">
-          <MemberForm scout={scout} onSaveSuccess={handleSaveSuccess} />
+          <MemberForm key={scout?.id || 'new-member'} scout={scout} onSaveSuccess={handleSaveSuccess} />
         </div>
       </DialogContent>
     </Dialog>

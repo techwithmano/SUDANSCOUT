@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Loader2, PlusCircle, Trash2, ShieldQuestion } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Separator } from "../ui/separator";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
@@ -34,16 +34,12 @@ const groups = [
   'troopAdvancedGuides', 'troopGirlGuides', 'troopBrownies'
 ];
 
-// This map will be more robust. It maps various possible display names back to the canonical key.
-// It will be case-insensitive and handle whitespace.
 const buildGroupKeyMap = () => {
     const map: { [key: string]: string } = {};
     const allTranslations = [translations.en.about, translations.ar.about];
     
     groups.forEach(key => {
-        // The key itself is a valid value
         map[key.toLowerCase()] = key;
-        
         allTranslations.forEach(t => {
             const translatedValue = t[key as keyof typeof t];
             if (translatedValue && typeof translatedValue === 'string') {
@@ -58,18 +54,16 @@ const groupKeyMap = buildGroupKeyMap();
 
 const getGroupKey = (groupValue: string | undefined): string => {
     if (!groupValue) return '';
-    return groupKeyMap[groupValue.toLowerCase().trim()] || groupValue; // Fallback to original value if not found
-}
+    return groupKeyMap[groupValue.toLowerCase().trim()] || groupValue;
+};
 
 const normalizeScoutDataForForm = (scout: Scout): ScoutFormValues => {
-    // Ensure payments is a sanitized array
     const sanitizedPayments = (scout.payments || []).map(p => ({
         month: p.month || '',
         amount: p.amount === undefined || p.amount === null ? 0 : Number(p.amount),
         status: p.status === 'paid' || p.status === 'due' ? p.status : 'due' as 'paid' | 'due',
     }));
 
-    // Resolve the group key
     const groupKey = getGroupKey(scout.group);
 
     return {
@@ -84,7 +78,6 @@ const normalizeScoutDataForForm = (scout: Scout): ScoutFormValues => {
     };
 };
 
-
 export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -93,7 +86,7 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
 
   const form = useForm<ScoutFormValues>({
     resolver: zodResolver(scoutSchema),
-    defaultValues: {
+    defaultValues: scout ? normalizeScoutDataForForm(scout) : {
       id: "",
       fullName: "",
       dateOfBirth: "",
@@ -103,25 +96,7 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
       payments: [],
     },
   });
-
-  useEffect(() => {
-    if (isEditMode && scout) {
-      const normalizedData = normalizeScoutDataForForm(scout);
-      form.reset(normalizedData);
-    } else {
-      // For new member form, reset to blank state.
-      form.reset({
-        id: "",
-        fullName: "",
-        dateOfBirth: "",
-        address: "",
-        group: "",
-        imageUrl: "",
-        payments: [],
-      });
-    }
-  }, [scout, isEditMode, form]);
-
+  
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "payments",
@@ -305,4 +280,3 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
     </Form>
   );
 }
-
