@@ -18,6 +18,37 @@ import { useAuth } from "@/context/AuthContext";
 import { MemberFormDialog } from "../admin/MemberFormDialog";
 import Papa from 'papaparse';
 import { cn } from "@/lib/utils";
+import translations from "@/locales";
+
+// This map helps find the correct internal group key (e.g., 'troopBoyScouts')
+// from a display value in either English or Arabic (e.g., "Boy Scouts Troop" or "فرقة الفتيان").
+const groups = [
+  'troopAdvanced', 'troopBoyScouts', 'troopCubScouts', 
+  'troopAdvancedGuides', 'troopGirlGuides', 'troopBrownies'
+];
+
+const buildGroupKeyMap = () => {
+    const map: { [key: string]: string } = {};
+    const allTranslations = [translations.en.about, translations.ar.about];
+    
+    groups.forEach(key => {
+        map[key.toLowerCase()] = key;
+        allTranslations.forEach(t => {
+            const translatedValue = t[key as keyof typeof t];
+            if (translatedValue && typeof translatedValue === 'string') {
+                map[translatedValue.toLowerCase().trim()] = key;
+            }
+        });
+    });
+    return map;
+};
+
+const groupKeyMap = buildGroupKeyMap();
+
+const getGroupKey = (groupValue: string | undefined): string => {
+    if (!groupValue) return '';
+    return groupKeyMap[String(groupValue).toLowerCase().trim()] || String(groupValue);
+};
 
 export default function AllMembersView() {
   const { t, locale } = useTranslation();
@@ -185,7 +216,7 @@ export default function AllMembersView() {
                         fullName: row.fullName || '',
                         dateOfBirth: parseDateFromImport(row.dateOfBirth),
                         address: row.address || '',
-                        group: row.group || '',
+                        group: getGroupKey(row.group), // Use helper to get the internal key
                         imageUrl: row.imageUrl || '',
                         payments: [],
                     };
@@ -228,7 +259,7 @@ export default function AllMembersView() {
                     const validatedData = scoutSchema.parse(scoutData);
                     const scoutRef = doc(db, 'scouts', validatedData.id);
                     const { id, ...savableData } = validatedData;
-                    batch.set(scoutRef, savableData);
+                    batch.set(scoutRef, savableData, { merge: true });
 
                     if (existingScoutIds.has(id)) {
                       updatedCount++;
