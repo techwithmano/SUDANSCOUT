@@ -6,13 +6,11 @@ import { MemberSearch } from "@/components/members/MemberSearch";
 import { useTranslation } from "@/context/LanguageContext";
 import AllMembersView from "@/components/views/AllMembersView";
 
-const ADMIN_EMAIL = 'sudanscoutadmin@scout.com';
-
 export default function MembersPage() {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { role } = useAuth();
   
-  const isAdmin = user?.email === ADMIN_EMAIL;
+  const isAdmin = role === 'general' || role === 'finance';
 
   if (isAdmin) {
     return <AllMembersView />;

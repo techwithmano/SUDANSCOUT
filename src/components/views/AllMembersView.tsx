@@ -13,16 +13,16 @@ import { scoutSchema } from "@/lib/data";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { collection, getDocs, query, deleteDoc, doc, writeBatch } from "firebase/firestore";
-import { db, auth } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
 import { MemberFormDialog } from "../admin/MemberFormDialog";
 import Papa from 'papaparse';
 import { cn } from "@/lib/utils";
 
-const ADMIN_EMAIL = 'sudanscoutadmin@scout.com';
-
 export default function AllMembersView() {
   const { t, locale } = useTranslation();
   const { toast } = useToast();
+  const { role } = useAuth();
   const [scouts, setScouts] = useState<Scout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -30,6 +30,8 @@ export default function AllMembersView() {
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  const canManageMembers = role === 'general' || role === 'finance';
+
   const fetchScouts = async () => {
     setIsLoading(true);
     try {
@@ -70,8 +72,8 @@ export default function AllMembersView() {
   }
 
   const handleDelete = async (scout: Scout) => {
-    if (auth.currentUser?.email !== ADMIN_EMAIL) {
-        toast({ variant: "destructive", title: t('admin.permissionDenied'), description: "You are not authorized to perform this action." });
+    if (!canManageMembers) {
+        toast({ variant: "destructive", title: t('admin.permissionDenied'), description: t('admin.permissionDeniedDesc') });
         return;
     }
 
@@ -332,14 +334,16 @@ export default function AllMembersView() {
               </h1>
               <p className="mt-2 text-lg text-muted-foreground">{t('admin.allMembersSubtitle')}</p>
           </div>
-          <div className="flex flex-wrap justify-center sm:justify-end gap-2">
-            <Button onClick={handleImportClick} disabled={isImporting}>
-              {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-              {isImporting ? t('admin.importing') : t('admin.importData')}
-            </Button>
-            <Button onClick={handleExportCsv} variant="outline"><Download className="mr-2 h-4 w-4" /> {t('admin.exportData')}</Button>
-            <Button onClick={handleAddNew}><UserPlus className="mr-2 h-4 w-4" />{t('admin.addNewMember')}</Button>
-          </div>
+          {canManageMembers && (
+            <div className="flex flex-wrap justify-center sm:justify-end gap-2">
+              <Button onClick={handleImportClick} disabled={isImporting}>
+                {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                {isImporting ? t('admin.importing') : t('admin.importData')}
+              </Button>
+              <Button onClick={handleExportCsv} variant="outline"><Download className="mr-2 h-4 w-4" /> {t('admin.exportData')}</Button>
+              <Button onClick={handleAddNew}><UserPlus className="mr-2 h-4 w-4" />{t('admin.addNewMember')}</Button>
+            </div>
+          )}
         </div>
         <Card>
           <CardContent className="p-0">
@@ -350,7 +354,7 @@ export default function AllMembersView() {
                       <TableHead className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{t('admin.memberName')}</TableHead>
                       <TableHead className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{t('members.scoutId')}</TableHead>
                       <TableHead className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{t('memberProfile.group')}</TableHead>
-                      <TableHead className={cn(locale === 'ar' ? 'text-left' : 'text-right')}>{t('memberProfile.action')}</TableHead>
+                      {canManageMembers && <TableHead className={cn(locale === 'ar' ? 'text-left' : 'text-right')}>{t('memberProfile.action')}</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -367,16 +371,18 @@ export default function AllMembersView() {
                         </TableCell>
                         <TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{scout.id}</TableCell>
                         <TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{getDisplayedGroup(scout.group || '')}</TableCell>
-                        <TableCell className={cn(locale === 'ar' ? 'text-left' : 'text-right')}>
-                          <div className="flex gap-2 justify-end">
-                              <Button variant="outline" size="icon" onClick={() => handleEdit(scout)}>
-                                  <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button variant="destructive" size="icon" onClick={() => handleDelete(scout)}>
-                                  <Trash2 className="h-4 w-4" />
-                              </Button>
-                          </div>
-                        </TableCell>
+                        {canManageMembers && (
+                          <TableCell className={cn(locale === 'ar' ? 'text-left' : 'text-right')}>
+                            <div className="flex gap-2 justify-end">
+                                <Button variant="outline" size="icon" onClick={() => handleEdit(scout)}>
+                                    <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button variant="destructive" size="icon" onClick={() => handleDelete(scout)}>
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>

@@ -13,14 +13,12 @@ import { useTranslation } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import type { Scout } from "@/lib/data";
 
-const ADMIN_EMAIL = 'sudanscoutadmin@scout.com';
-
 const groupKeys = ['troopAdvanced', 'troopBoyScouts', 'troopCubScouts', 'troopAdvancedGuides', 'troopGirlGuides', 'troopBrownies'];
 
 export default function MemberProfileView({ scout }: { scout: Scout }) {
   const { t, locale } = useTranslation();
-  const { user } = useAuth();
-  const isAdmin = user?.email === ADMIN_EMAIL;
+  const { role } = useAuth();
+  const isAdmin = role === 'general' || role === 'finance';
 
   if (!scout) {
     notFound();
@@ -51,7 +49,7 @@ export default function MemberProfileView({ scout }: { scout: Scout }) {
     if (groupValue && groupKeys.includes(groupValue)) {
         return t(`about.${groupValue}`);
     }
-    return groupValue; // It's an old, already-translated value, so just display it.
+    return groupValue;
   };
 
   return (

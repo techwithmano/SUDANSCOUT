@@ -15,9 +15,10 @@ import { Loader2, PackagePlus, Pencil } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { addDoc, collection, doc, updateDoc } from "firebase/firestore";
-import { db, auth } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "../ui/dialog";
 import { useTranslation } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
 
 type ProductFormValues = z.infer<typeof productSchema>;
 
@@ -27,13 +28,13 @@ interface ProductFormDialogProps {
   product: Product | null;
 }
 
-const ADMIN_EMAIL = 'sudanscoutadmin@scout.com';
-
 export function ProductFormDialog({ isOpen, onClose, product }: ProductFormDialogProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { role } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditMode = !!product;
+  const canManage = role === 'general' || role === 'finance';
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -69,7 +70,7 @@ export function ProductFormDialog({ isOpen, onClose, product }: ProductFormDialo
   const onSubmit = async (data: ProductFormValues) => {
     setIsSubmitting(true);
 
-    if (auth.currentUser?.email !== ADMIN_EMAIL) {
+    if (!canManage) {
         toast({ variant: "destructive", title: t('admin.permissionDenied'), description: t('admin.savePermissionErrorDesc') });
         setIsSubmitting(false);
         return;

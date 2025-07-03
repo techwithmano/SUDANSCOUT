@@ -9,12 +9,10 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 
-const ADMIN_EMAIL = 'sudanscoutadmin@scout.com';
-
 export default function StoreView({ products }: { products: Product[] }) {
   const { t } = useTranslation();
-  const { user } = useAuth();
-  const isAdmin = user?.email === ADMIN_EMAIL;
+  const { role } = useAuth();
+  const canManageStore = role === 'general' || role === 'finance';
 
   return (
     <div className="container mx-auto px-4 py-16">
@@ -24,7 +22,7 @@ export default function StoreView({ products }: { products: Product[] }) {
           {t('store.mainSubtitle')}
         </p>
 
-        {isAdmin && (
+        {canManageStore && (
           <div className="mt-8">
             <Button asChild>
               <Link href="/admin/products">

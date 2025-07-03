@@ -42,10 +42,17 @@ export const scoutSchema = z.object({
   payments: z.array(paymentSchema).optional().default([]),
 });
 
+export const postSchema = z.object({
+  title: z.string().min(3, "Title is required"),
+  content: z.string().min(10, "Content is required"),
+  imageUrl: z.string().url('A valid image URL is required').default('https://placehold.co/600x400.png'),
+  aiHint: z.string().optional().default('scouts event'),
+  createdAt: z.any(),
+});
 
 export type Payment = z.infer<typeof paymentSchema>;
-
 export type Scout = z.infer<typeof scoutSchema>;
+export type Post = z.infer<typeof postSchema> & { id: string };
 
 export interface CartItem extends Product {
   quantity: number;

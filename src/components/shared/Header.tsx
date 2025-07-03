@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, Languages, ShoppingCart, LogOut, ShieldCheck, Users, Package } from "lucide-react";
+import { Menu, Languages, ShoppingCart, LogOut, ShieldCheck, Users, Package, Newspaper } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -23,19 +23,18 @@ import {
 } from "@/components/ui/dropdown-menu"
 import Image from "next/image";
 
-const ADMIN_EMAIL = 'sudanscoutadmin@scout.com';
-
 export function Header() {
   const { t, toggleLocale, locale } = useTranslation();
   const { cartCount } = useCart();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user } = useAuth();
-  const isAdmin = user?.email === ADMIN_EMAIL;
+  const { user, role } = useAuth();
+  const isAdmin = !!role;
 
   const navItems = [
     { href: "/", label: t('header.home') },
     { href: "/about", label: t('header.about') },
+    { href: "/activities", label: t('header.activities') },
     { href: "/store", label: t('header.store') },
     { href: "/members", label: t('header.members') },
     { href: "/contact", label: t('header.contact') },
@@ -99,8 +98,15 @@ export function Header() {
                   <DropdownMenuContent align="end">
                       <DropdownMenuLabel>{t('admin.adminMenu')}</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild><Link href="/members"><Users className="mr-2 h-4 w-4" />{t('admin.allMembersTitle')}</Link></DropdownMenuItem>
-                      <DropdownMenuItem asChild><Link href="/admin/products"><Package className="mr-2 h-4 w-4" />{t('admin.manageProducts')}</Link></DropdownMenuItem>
+                      {(role === 'general' || role === 'finance') && (
+                        <>
+                          <DropdownMenuItem asChild><Link href="/members"><Users className="mr-2 h-4 w-4" />{t('admin.allMembersTitle')}</Link></DropdownMenuItem>
+                          <DropdownMenuItem asChild><Link href="/admin/products"><Package className="mr-2 h-4 w-4" />{t('admin.manageProducts')}</Link></DropdownMenuItem>
+                        </>
+                      )}
+                      {(role === 'general' || role === 'media') && (
+                        <DropdownMenuItem asChild><Link href="/admin/activities"><Newspaper className="mr-2 h-4 w-4" />{t('admin.manageActivities')}</Link></DropdownMenuItem>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
                           <LogOut className="mr-2 h-4 w-4" />

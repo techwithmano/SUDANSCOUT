@@ -3,23 +3,40 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
+
+export type UserRole = 'general' | 'finance' | 'media' | null;
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  role: UserRole;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [role, setRole] = useState<UserRole>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const adminDocRef = doc(db, 'admins', user.uid);
+        const adminDocSnap = await getDoc(adminDocRef);
+        if (adminDocSnap.exists()) {
+          setRole(adminDocSnap.data().role as UserRole);
+        } else {
+          setRole(null);
+        }
+        setUser(user);
+      } else {
+        setUser(null);
+        setRole(null);
+      }
       setLoading(false);
     });
 
@@ -45,7 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, role }}>
       {children}
     </AuthContext.Provider>
   );

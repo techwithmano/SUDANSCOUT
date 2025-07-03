@@ -15,8 +15,9 @@ import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Separator } from "../ui/separator";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
-import { db, auth } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 import { useTranslation } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import translations from "@/locales";
 
@@ -26,8 +27,6 @@ interface MemberFormProps {
   scout?: Scout | null;
   onSaveSuccess?: () => void;
 }
-
-const ADMIN_EMAIL = 'sudanscoutadmin@scout.com';
 
 const groups = [
   'troopAdvanced', 'troopBoyScouts', 'troopCubScouts', 
@@ -81,8 +80,10 @@ const normalizeScoutDataForForm = (scout: Scout): ScoutFormValues => {
 export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { role } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditMode = !!scout;
+  const canManage = role === 'general' || role === 'finance';
 
   const form = useForm<ScoutFormValues>({
     resolver: zodResolver(scoutSchema),
@@ -105,7 +106,7 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
   const onSubmit = async (data: ScoutFormValues) => {
     setIsSubmitting(true);
 
-    if (auth.currentUser?.email !== ADMIN_EMAIL) {
+    if (!canManage) {
       toast({ variant: "destructive", title: t('admin.permissionDenied'), description: t('admin.permissionDeniedDesc') });
       setIsSubmitting(false);
       return;

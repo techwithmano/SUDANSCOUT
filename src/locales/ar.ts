@@ -4,6 +4,7 @@ export default {
   header: {
     home: 'الرئيسية',
     about: 'عنا',
+    activities: 'الأنشطة',
     store: 'المتجر',
     members: 'الأعضاء',
     contact: 'اتصل بنا',
@@ -77,6 +78,14 @@ export default {
     troopBrownies: 'فرقة الزهرات',
     troopGirlGuides: 'فرقة المرشدات',
     troopAdvancedGuides: 'فرقة مرشدات المتقدم',
+  },
+  // Activities Page
+  activities: {
+    title: 'أنشطتنا',
+    subtitle: 'شاهد آخر أخبارنا! هنا آخر التحديثات والقصص والإعلانات من مغامراتنا.',
+    readMore: 'اقرأ المزيد',
+    noPosts: 'لم يتم نشر أي أنشطة بعد. عد قريبًا للاطلاع على التحديثات!',
+    postedOn: 'نُشر في {date}',
   },
   // Contact Page
   contact: {
@@ -198,11 +207,13 @@ export default {
     loginErrorDescription: 'بيانات الاعتماد غير صالحة. الرجاء المحاولة مرة أخرى.',
     adminMenu: 'قائمة المسؤول',
     manageProducts: 'إدارة المنتجات',
+    manageActivities: 'إدارة الأنشطة',
     logout: 'تسجيل الخروج',
+    // Products
     productsTitle: 'إدارة المنتجات',
     productsSubtitle: 'أضف، عدّل، أو أزل المنتجات من المتجر.',
     addProductTitle: 'إضافة منتج جديد',
-    addProductDesc: 'املأ التفاصيل للمنتج الجديد.',
+    addProductDesc: 'املأ تفاصيل المنتج الجديد.',
     editProductTitle: 'تعديل المنتج',
     editProductDesc: 'تعديل تفاصيل المنتج {name}.',
     nameEn: 'الاسم (انجليزي)',
@@ -223,6 +234,21 @@ export default {
     productDeletedError: 'فشل حذف المنتج',
     existingProducts: 'المنتجات الحالية',
     product: 'المنتج',
+    // Activities
+    activitiesTitle: 'إدارة الأنشطة',
+    activitiesSubtitle: 'إنشاء وتعديل ومشاركة التحديثات حول أنشطة المجموعة.',
+    addPostTitle: 'إضافة منشور جديد',
+    editPostTitle: 'تعديل المنشور',
+    postTitle: 'العنوان',
+    postContent: 'المحتوى',
+    postTitlePlaceholder: 'عنوان المنشور',
+    postContentPlaceholder: 'اكتب تحديثك هنا...',
+    postAddedSuccess: 'تمت إضافة المنشور بنجاح!',
+    postUpdatedSuccess: 'تم تحديث المنشور بنجاح!',
+    postDeletedSuccess: 'تم حذف المنشور بنجاح!',
+    postDeletedError: 'فشل حذف المنشور.',
+    existingPosts: 'المنشورات الحالية',
+    // Members
     allMembersTitle: 'جميع الأعضاء',
     allMembersSubtitle: 'عرض وإدارة جميع أعضاء الكشافة.',
     memberName: 'اسم العضو',
@@ -251,12 +277,13 @@ export default {
     saveChanges: 'حفظ التغييرات',
     createMember: 'إنشاء عضو',
     createProduct: 'إنشاء منتج',
+    createPost: 'إنشاء منشور',
     editMemberTitle: 'تعديل ملف العضو',
     addMemberTitle: 'إضافة عضو جديد',
     editMemberDesc: 'تعديل ملف {name}.',
     addMemberDesc: 'املأ تفاصيل العضو الجديد.',
     permissionDenied: 'تم رفض الإذن',
-    permissionDeniedDesc: 'أنت غير مصرح لك بحفظ بيانات الأعضاء.',
+    permissionDeniedDesc: 'أنت غير مصرح لك بتنفيذ هذا الإجراء.',
     savePermissionErrorDesc: 'أنت غير مصرح لك بحفظ بيانات المنتج.',
     updateSuccess: 'نجاح!',
     updateSuccessDesc: 'تم تحديث ملف العضو بنجاح.',
@@ -264,13 +291,15 @@ export default {
     idExistsError: 'خطأ',
     idExistsErrorDesc: 'يوجد عضو بنفس المعرف بالفعل. الرجاء استخدام معرف فريد.',
     saveError: 'خطأ',
-    saveErrorDesc: 'فشل حفظ الكشاف: {error}',
+    saveErrorDesc: 'فشل الحفظ: {error}',
     deleteSuccessDesc: 'تم حذف {name}.',
-    deleteErrorDesc: 'فشل حذف الكشاف. الرجاء التأكد من تكوين قواعد فايرستور بشكل صحيح. الخطأ: {error}',
+    deleteErrorDesc: 'فشل الحذف. الخطأ: {error}',
     fetchError: 'خطأ',
     fetchErrorDesc: 'لا يمكن جلب قائمة الأعضاء.',
     fetchProductsError: 'خطأ',
     fetchProductsErrorDesc: 'لا يمكن جلب قائمة المنتجات.',
+    fetchPostsError: 'خطأ',
+    fetchPostsErrorDesc: 'لا يمكن جلب قائمة المنشورات.',
     deletePermissionError: 'تم رفض الإذن',
     deletePermissionErrorDesc: 'أنت غير مصرح لك بتنفيذ هذا الإجراء.',
     unknownError: 'حدث خطأ غير معروف.',
@@ -284,5 +313,3 @@ export default {
     selectCsv: 'اختر ملف CSV للاستيراد',
   }
 };
-
-    

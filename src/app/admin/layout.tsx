@@ -6,30 +6,48 @@ import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Footer } from '@/components/shared/Footer';
 
-const ADMIN_EMAIL = 'sudanscoutadmin@scout.com';
-
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, role, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-
-  const isLoginPage = pathname === '/admin' || pathname === '/admin/login';
   
-  const isAdmin = user?.email === ADMIN_EMAIL;
-
   useEffect(() => {
-    // If we're not on the login page, and the user is not an admin, redirect them to login.
-    if (!isLoginPage && !loading && !isAdmin) {
-      router.push('/admin');
+    if (loading) return;
+
+    const isLoginPage = pathname === '/admin' || pathname === '/admin/login';
+    const isAdmin = !!role;
+
+    // Redirect logged-in admins away from the login page
+    if (isLoginPage && isAdmin) {
+      if (role === 'media') return router.push('/admin/activities');
+      // Default for 'general' and 'finance'
+      return router.push('/members');
     }
-    // If the user is an admin and they are on the login page, redirect them to the members list.
-    if (isLoginPage && !loading && isAdmin) {
-      router.push('/members');
+
+    // Redirect non-admins trying to access admin pages
+    if (!isLoginPage && !isAdmin) {
+      return router.push('/admin');
     }
-  }, [user, loading, isAdmin, router, pathname, isLoginPage]);
+
+    // Page-specific access control for logged-in admins
+    if (!isLoginPage && isAdmin) {
+      const isFinancePage = pathname.startsWith('/members') || pathname.startsWith('/admin/members') || pathname.startsWith('/admin/products');
+      const isMediaPage = pathname.startsWith('/admin/activities');
+      
+      const canAccessFinance = role === 'general' || role === 'finance';
+      const canAccessMedia = role === 'general' || role === 'media';
+
+      if (isFinancePage && !canAccessFinance) {
+        return router.push('/admin');
+      }
+      if (isMediaPage && !canAccessMedia) {
+        return router.push('/admin');
+      }
+    }
+  }, [user, role, loading, router, pathname]);
 
   // Don't protect the login page itself
-  if (isLoginPage) {
+  if (pathname === '/admin' || pathname === '/admin/login') {
     return (
         <div className="flex flex-col min-h-screen">
           <main className="flex-grow">{children}</main>
@@ -39,7 +57,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   // Show a loader while checking auth state or if user is not an admin yet
-  if (loading || !isAdmin) {
+  if (loading || !role) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

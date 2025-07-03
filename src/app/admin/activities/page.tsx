@@ -7,108 +7,113 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { collection, getDocs, query, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, query, deleteDoc, doc, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { Product } from '@/lib/data';
-import { PlusCircle, Trash2, Loader2, ShieldCheck, Edit, Newspaper } from 'lucide-react';
+import type { Post } from '@/lib/data';
+import { PlusCircle, Trash2, Loader2, Edit, Newspaper } from 'lucide-react';
 import Image from 'next/image';
-import { ProductFormDialog } from '@/components/admin/ProductFormDialog';
+import { PostFormDialog } from '@/components/admin/PostFormDialog';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 
-export default function AdminProductsPage() {
+export default function AdminActivitiesPage() {
   const { t, locale } = useTranslation();
   const { toast } = useToast();
   const { role } = useAuth();
-  const [products, setProducts] = useState<Product[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
 
-  const canManage = role === 'general' || role === 'finance';
+  const canManage = role === 'general' || role === 'media';
 
-  async function fetchProducts() {
+  async function fetchPosts() {
     setIsLoading(true);
     try {
-        const productsCol = collection(db, 'products');
-        const q = query(productsCol);
-        const productsSnapshot = await getDocs(q);
-        const productsList = productsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-        } as Product));
-        setProducts(productsList);
+        const postsCol = collection(db, 'posts');
+        const q = query(postsCol, orderBy('createdAt', 'desc'));
+        const postsSnapshot = await getDocs(q);
+        const postsList = postsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Post));
+        setPosts(postsList);
     } catch (error) {
-        console.error("Error fetching products:", error);
-        toast({ variant: 'destructive', title: t('admin.fetchProductsError'), description: t('admin.fetchProductsErrorDesc') });
+        console.error("Error fetching posts:", error);
+        toast({ variant: 'destructive', title: t('admin.fetchPostsError'), description: t('admin.fetchPostsErrorDesc') });
     }
     setIsLoading(false);
   }
 
   useEffect(() => {
-    fetchProducts();
+    fetchPosts();
   }, []);
 
   const handleAddNew = () => {
-    setEditingProduct(null);
+    setEditingPost(null);
     setIsDialogOpen(true);
   };
 
-  const handleEdit = (product: Product) => {
-    setEditingProduct(product);
+  const handleEdit = (post: Post) => {
+    setEditingPost(post);
     setIsDialogOpen(true);
   };
 
   const handleDialogClose = (wasSaved: boolean) => {
     setIsDialogOpen(false);
     if (wasSaved) {
-      fetchProducts(); // Refresh the list if a change was made
+      fetchPosts();
     }
   };
   
-  const handleDelete = async (productId: string) => {
+  const handleDelete = async (postId: string) => {
     if (!canManage) {
         toast({ variant: "destructive", title: t('admin.deletePermissionError'), description: t('admin.deletePermissionErrorDesc') });
         return;
     }
 
     try {
-        await deleteDoc(doc(db, 'products', productId));
-        toast({ title: t('admin.productDeletedSuccess') });
-        await fetchProducts(); // Refetch products
+        await deleteDoc(doc(db, 'posts', postId));
+        toast({ title: t('admin.postDeletedSuccess') });
+        await fetchPosts();
     } catch (error) {
-        console.error("Failed to delete product:", error);
+        console.error("Failed to delete post:", error);
         const errorMessage = error instanceof Error ? error.message : t('admin.unknownError');
-        toast({ variant: 'destructive', title: t('admin.productDeletedError'), description: errorMessage });
+        toast({ variant: 'destructive', title: t('admin.postDeletedError'), description: errorMessage });
     }
+  };
+
+  const formatDate = (timestamp: Timestamp) => {
+    if (!timestamp) return 'N/A';
+    return timestamp.toDate().toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-US');
   };
 
   return (
     <>
-      <ProductFormDialog 
+      <PostFormDialog 
         isOpen={isDialogOpen}
         onClose={handleDialogClose}
-        product={editingProduct}
+        post={editingPost}
       />
       <div className="container mx-auto px-4 py-16">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-12 gap-4">
             <div className="text-center sm:text-left">
               <h1 className="text-4xl md:text-5xl font-bold font-headline text-primary flex items-center justify-center sm:justify-start gap-3">
-                  <ShieldCheck className="h-10 w-10" /> {t('admin.productsTitle')}
+                  <Newspaper className="h-10 w-10" /> {t('admin.activitiesTitle')}
               </h1>
-              <p className="mt-4 text-lg text-muted-foreground">{t('admin.productsSubtitle')}</p>
+              <p className="mt-4 text-lg text-muted-foreground">{t('admin.activitiesSubtitle')}</p>
             </div>
             {canManage && (
               <Button onClick={handleAddNew}>
                   <PlusCircle className="mr-2 h-4 w-4" />
-                  {t('admin.addProductTitle')}
+                  {t('admin.addPostTitle')}
               </Button>
             )}
         </div>
 
         <Card className="shadow-lg">
           <CardHeader>
-              <CardTitle className="font-headline text-xl">{t('admin.existingProducts')}</CardTitle>
+              <CardTitle className="font-headline text-xl">{t('admin.existingPosts')}</CardTitle>
           </CardHeader>
           <CardContent>
               {isLoading ? (
@@ -120,28 +125,25 @@ export default function AdminProductsPage() {
               <Table>
                   <TableHeader>
                       <TableRow>
-                          <TableHead className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{t('admin.product')}</TableHead>
-                          <TableHead className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{t('admin.category')}</TableHead>
-                          <TableHead className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{t('admin.price')}</TableHead>
+                          <TableHead className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>Title</TableHead>
+                          <TableHead>Created At</TableHead>
                           {canManage && <TableHead className={cn(locale === 'ar' ? 'text-left' : 'text-right')}>{t('memberProfile.action')}</TableHead>}
                       </TableRow>
                   </TableHeader>
                   <TableBody>
-                      {products.map((product) => (
-                          <TableRow key={product.id}>
-                              <TableCell className={cn("font-medium flex items-center gap-3", locale === 'ar' ? 'text-right' : 'text-left')}>
-                                  <Image src={product.imageUrl} alt={product.name_en || product.aiHint} width={40} height={40} className="rounded-sm object-cover" />
-                                  <span>{product.name_en} / {product.name_ar}</span>
+                      {posts.map((post) => (
+                          <TableRow key={post.id}>
+                              <TableCell className={cn("font-medium", locale === 'ar' ? 'text-right' : 'text-left')}>
+                                {post.title}
                               </TableCell>
-                              <TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{t(`admin.category${product.category.charAt(0).toUpperCase() + product.category.slice(1)}`)}</TableCell>
-                              <TableCell className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{product.price.toFixed(3)} KWD</TableCell>
+                              <TableCell>{formatDate(post.createdAt as Timestamp)}</TableCell>
                               {canManage && (
                                 <TableCell className={cn(locale === 'ar' ? 'text-left' : 'text-right')}>
                                   <div className="flex gap-2 justify-end">
-                                      <Button variant="outline" size="icon" onClick={() => handleEdit(product)}>
+                                      <Button variant="outline" size="icon" onClick={() => handleEdit(post)}>
                                           <Edit className="h-4 w-4" />
                                       </Button>
-                                      <Button variant="destructive" size="icon" onClick={() => handleDelete(product.id)}>
+                                      <Button variant="destructive" size="icon" onClick={() => handleDelete(post.id)}>
                                           <Trash2 className="h-4 w-4" />
                                       </Button>
                                   </div>

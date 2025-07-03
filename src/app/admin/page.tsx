@@ -18,8 +18,6 @@ import { ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
-const ADMIN_EMAIL = 'sudanscoutadmin@scout.com';
-
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -41,18 +39,16 @@ export default function AdminLoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsSubmitting(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
-      
-      if (userCredential.user.email !== ADMIN_EMAIL) {
-        await auth.signOut();
-        throw new Error("Access denied. Not an admin account.");
-      }
-
+      await signInWithEmailAndPassword(auth, data.email, data.password);
+      // The AdminLayout will handle redirection based on role after successful login.
+      // The AuthContext handles fetching the role.
       toast({
         title: t('admin.loginSuccessTitle'),
         description: t('admin.loginSuccessDescription'),
       });
-      router.push("/members");
+      // A slight delay might be needed for AuthContext to update before layout redirects
+      setTimeout(() => router.push('/members'), 50);
+
     } catch (error) {
       toast({
         variant: "destructive",
