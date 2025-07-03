@@ -34,16 +34,55 @@ const groups = [
   'troopAdvancedGuides', 'troopGirlGuides', 'troopBrownies'
 ];
 
-// This map helps convert old, translated group names back to their consistent keys.
-const groupTranslationMap: { [key: string]: string } = {};
-Object.keys(translations.en.about).forEach(key => {
-    if (groups.includes(key)) {
-        const enValue = translations.en.about[key as keyof typeof translations.en.about];
-        const arValue = translations.ar.about[key as keyof typeof translations.ar.about];
-        if (enValue) groupTranslationMap[enValue] = key;
-        if (arValue) groupTranslationMap[arValue] = key;
-    }
-});
+// This map will be more robust. It maps various possible display names back to the canonical key.
+// It will be case-insensitive and handle whitespace.
+const buildGroupKeyMap = () => {
+    const map: { [key: string]: string } = {};
+    const allTranslations = [translations.en.about, translations.ar.about];
+    
+    groups.forEach(key => {
+        // The key itself is a valid value
+        map[key.toLowerCase()] = key;
+        
+        allTranslations.forEach(t => {
+            const translatedValue = t[key as keyof typeof t];
+            if (translatedValue && typeof translatedValue === 'string') {
+                map[translatedValue.toLowerCase().trim()] = key;
+            }
+        });
+    });
+    return map;
+};
+
+const groupKeyMap = buildGroupKeyMap();
+
+const getGroupKey = (groupValue: string | undefined): string => {
+    if (!groupValue) return '';
+    return groupKeyMap[groupValue.toLowerCase().trim()] || groupValue; // Fallback to original value if not found
+}
+
+const normalizeScoutDataForForm = (scout: Scout): ScoutFormValues => {
+    // Ensure payments is a sanitized array
+    const sanitizedPayments = (scout.payments || []).map(p => ({
+        month: p.month || '',
+        amount: p.amount === undefined || p.amount === null ? 0 : Number(p.amount),
+        status: p.status === 'paid' || p.status === 'due' ? p.status : 'due' as 'paid' | 'due',
+    }));
+
+    // Resolve the group key
+    const groupKey = getGroupKey(scout.group);
+
+    return {
+        ...scout,
+        group: groupKey,
+        payments: sanitizedPayments,
+        imageUrl: scout.imageUrl === 'https://placehold.co/400x400.png' ? '' : scout.imageUrl || '',
+        id: scout.id || '',
+        fullName: scout.fullName || '',
+        dateOfBirth: scout.dateOfBirth || '',
+        address: scout.address || '',
+    };
+};
 
 
 export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
@@ -66,23 +105,11 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
   });
 
   useEffect(() => {
-    if (scout) {
-      const groupValue = scout.group || '';
-      const groupKey = groupTranslationMap[groupValue] || groupValue;
-      
-      const sanitizedPayments = (scout.payments || []).map(p => ({
-          month: p.month || '',
-          amount: p.amount || 0,
-          status: p.status || 'due'
-      }));
-
-      form.reset({
-        ...scout,
-        group: groupKey,
-        payments: sanitizedPayments,
-        imageUrl: scout.imageUrl === 'https://placehold.co/400x400.png' ? '' : scout.imageUrl,
-      });
+    if (isEditMode && scout) {
+      const normalizedData = normalizeScoutDataForForm(scout);
+      form.reset(normalizedData);
     } else {
+      // For new member form, reset to blank state.
       form.reset({
         id: "",
         fullName: "",
@@ -93,7 +120,7 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
         payments: [],
       });
     }
-  }, [scout, form.reset]);
+  }, [scout, isEditMode, form]);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -226,38 +253,38 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
                 <div className="space-y-4">
                     {fields.length > 0 ? (
                         fields.map((field, index) => (
-                          <div key={field.id} className="relative p-4 pt-6 border rounded-lg bg-card shadow-sm">
+                          <div key={field.id} className="p-4 border rounded-lg bg-card shadow-sm flex flex-col sm:flex-row sm:items-end sm:gap-4">
+                            <div className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-4">
+                               <FormField control={form.control} name={`payments.${index}.month`} render={({ field }) => (<FormItem><FormLabel>{t('admin.paymentMonth')}</FormLabel><FormControl><Input {...field} placeholder={t('admin.paymentMonthHint')} /></FormControl><FormMessage /></FormItem>)} />
+                               <FormField control={form.control} name={`payments.${index}.amount`} render={({ field }) => (<FormItem><FormLabel>{t('admin.paymentAmount')}</FormLabel><FormControl><Input type="number" step="0.001" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                               <FormField control={form.control} name={`payments.${index}.status`} render={({ field }) => (
+                                 <FormItem>
+                                   <FormLabel>{t('admin.paymentStatus')}</FormLabel>
+                                   <Select onValueChange={field.onChange} value={field.value}>
+                                     <FormControl>
+                                       <SelectTrigger>
+                                         <SelectValue placeholder={t('admin.selectStatus')} />
+                                       </SelectTrigger>
+                                     </FormControl>
+                                     <SelectContent>
+                                       <SelectItem value="due">{t('admin.statusDue')}</SelectItem>
+                                       <SelectItem value="paid">{t('admin.statusPaid')}</SelectItem>
+                                     </SelectContent>
+                                   </Select>
+                                   <FormMessage />
+                                 </FormItem>
+                               )} />
+                            </div>
                             <Button
                               type="button"
                               variant="ghost"
                               size="icon"
                               onClick={() => remove(index)}
-                              className="absolute top-1 right-1 h-7 w-7 text-destructive hover:bg-destructive/10"
+                              className="mt-4 sm:mt-0 flex-shrink-0 h-9 w-9 text-destructive hover:bg-destructive/10 self-end sm:self-end"
                               aria-label="Remove payment"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              <FormField control={form.control} name={`payments.${index}.month`} render={({ field }) => (<FormItem><FormLabel>{t('admin.paymentMonth')}</FormLabel><FormControl><Input {...field} placeholder={t('admin.paymentMonthHint')} /></FormControl><FormMessage /></FormItem>)} />
-                              <FormField control={form.control} name={`payments.${index}.amount`} render={({ field }) => (<FormItem><FormLabel>{t('admin.paymentAmount')}</FormLabel><FormControl><Input type="number" step="0.001" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                              <FormField control={form.control} name={`payments.${index}.status`} render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>{t('admin.paymentStatus')}</FormLabel>
-                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder={t('admin.selectStatus')} />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      <SelectItem value="due">{t('admin.statusDue')}</SelectItem>
-                                      <SelectItem value="paid">{t('admin.statusPaid')}</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                                </FormItem>
-                              )} />
-                            </div>
                           </div>
                         ))
                     ) : (
@@ -278,3 +305,4 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
     </Form>
   );
 }
+
