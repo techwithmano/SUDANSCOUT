@@ -251,7 +251,7 @@ export default {
     postTitlePlaceholder: 'Title of your post',
     postContentPlaceholder: 'Write your update here...',
     videoUrl: 'Video URL',
-    videoUrlPlaceholder: 'Paste a YouTube or Instagram post URL',
+    videoUrlPlaceholder: 'Paste a public Google Drive video link',
     albumImages: 'Album Images',
     addAlbumImage: 'Add Image',
     postAddedSuccess: 'Post added successfully!',

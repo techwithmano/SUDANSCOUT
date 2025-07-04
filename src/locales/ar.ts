@@ -251,7 +251,7 @@ export default {
     postTitlePlaceholder: 'عنوان المنشور',
     postContentPlaceholder: 'اكتب تحديثك هنا...',
     videoUrl: 'رابط الفيديو',
-    videoUrlPlaceholder: 'الصق رابط منشور يوتيوب أو انستغرام',
+    videoUrlPlaceholder: 'الصق رابط فيديو عام من جوجل درايف',
     albumImages: 'صور الألبوم',
     addAlbumImage: 'إضافة صورة',
     postAddedSuccess: 'تمت إضافة المنشور بنجاح!',

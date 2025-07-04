@@ -9,7 +9,6 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { useTranslation } from '@/context/LanguageContext';
 import type { Post } from '@/lib/data';
 import { Megaphone, Film, Images } from 'lucide-react';
-import InstagramEmbed from '@/components/shared/InstagramEmbed';
 
 const formatDate = (isoString: any, locale: string, t: (key: string, params?: any) => string) => {
   if (!isoString?.toDate) return 'Date not available';
@@ -69,30 +68,26 @@ const PhotoCard = ({ post, t, locale }: { post: any, t: any, locale: string }) =
 );
 
 const VideoCard = ({ post, t, locale }: { post: any, t: any, locale: string }) => {
-  const isInstagram = post.videoUrl && post.videoUrl.includes('instagram.com');
-  
-  const getYouTubeId = (url: string) => {
-    if (!url) return null;
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
+  const getGoogleDriveEmbedUrl = (url: string): string | null => {
+    if (!url || !url.includes('drive.google.com')) return null;
+    const match = url.match(/file\/d\/([^/]+)/);
+    const fileId = match ? match[1] : null;
+    if (!fileId) return null;
+    return `https://drive.google.com/file/d/${fileId}/preview`;
   };
 
-  const videoId = !isInstagram ? getYouTubeId(post.videoUrl) : null;
-  const wrapperClass = isInstagram ? "bg-black" : "aspect-w-16 aspect-h-9 bg-black";
+  const embedUrl = getGoogleDriveEmbedUrl(post.videoUrl);
 
   return (
     <Card className="flex flex-col overflow-hidden shadow-lg group">
       <CardHeader className="p-0 relative">
-        <div className={wrapperClass}>
-          {isInstagram ? (
-            <InstagramEmbed key={post.videoUrl} url={post.videoUrl} />
-          ) : videoId ? (
+        <div className="aspect-w-16 aspect-h-9 bg-black">
+          {embedUrl ? (
             <iframe
-              src={`https://www.youtube.com/embed/${videoId}`}
+              src={embedUrl}
               title={post.title}
               frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="autoplay"
               allowFullScreen
               className="w-full h-full"
             ></iframe>
