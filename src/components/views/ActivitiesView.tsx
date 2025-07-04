@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,7 +10,7 @@ import { useTranslation } from '@/context/LanguageContext';
 import type { Post } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { Film, Images, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -54,6 +54,44 @@ const PostHeader = ({ post, t, locale }: { post: any; t: any; locale: string }) 
     </div>
   </div>
 );
+
+const ClickableText = ({ text }: { text: string }) => {
+  if (!text) return null;
+
+  // Regex to match URLs (http, https, www) and email addresses
+  const pattern = /(https?:\/\/[^\s]+|www\.[^\s]+|\S+@\S+\.\S+)/g;
+  const parts = text.split(pattern);
+
+  return (
+    <>
+      {parts.map((part, index) => {
+        if (!part) return null;
+
+        if (part.match(pattern)) {
+          let href = part;
+          if (part.startsWith('www.')) {
+            href = `http://${part}`;
+          } else if (/\S+@\S+\.\S+/.test(part)) {
+            href = `mailto:${part}`;
+          }
+          return (
+            <a
+              key={index}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              {part}
+            </a>
+          );
+        }
+        return <span key={index}>{part}</span>;
+      })}
+    </>
+  );
+};
+
 
 const AlbumGrid = ({ images, onOpen }: { images: { url: string; aiHint?: string }[]; onOpen: () => void }) => {
     const photoCount = images.length;
@@ -130,25 +168,28 @@ const PostCard = ({ post, t, locale, onAlbumOpen }: { post: Post; t: any; locale
       
       <div className={cn("px-4 pb-4", isAnnouncement && "bg-secondary/50")}>
         <h2 className={cn("text-xl font-semibold mb-2", isAnnouncement && "text-primary")}>{post.title}</h2>
-        <p className="text-muted-foreground whitespace-pre-wrap break-words">{post.content}</p>
+        <div className="text-muted-foreground whitespace-pre-wrap break-words">
+          <ClickableText text={post.content} />
+        </div>
       </div>
 
-      {post.type === 'photo' && (
-        <div className="w-full bg-secondary">
+      {post.type === 'photo' && post.imageUrl && (
+        <div className="w-full bg-secondary aspect-[4/3] relative">
           <Image
             src={post.imageUrl}
             alt={post.title}
-            width={700}
-            height={500}
-            className="w-full h-auto object-contain max-h-[70vh]"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-contain"
             data-ai-hint={post.aiHint}
           />
         </div>
       )}
 
-      {post.type === 'video' && (
+      {post.type === 'video' && post.videoUrl && (
         <div className="aspect-video bg-black">
            <video
+              key={post.videoUrl}
               src={post.videoUrl}
               controls
               className="w-full h-full object-contain"
