@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 export type Product = {
@@ -22,7 +23,7 @@ export const productSchema = z.object({
   description_ar: z.string().min(1, 'Arabic description is required'),
   price: z.coerce.number().min(0.01, 'Price is required'),
   category: z.enum(['clothing', 'gear'], { required_error: 'Category is required' }),
-  imageUrl: z.string().url('A valid image URL is required').default('https://placehold.co/400x300.png'),
+  imageUrl: z.string().url('A valid image URL is required'),
   aiHint: z.string().optional().default('product'),
 });
 
@@ -38,7 +39,7 @@ export const scoutSchema = z.object({
   dateOfBirth: z.string().min(1, "Date of birth is required"),
   address: z.string().min(5, "Address is required"),
   group: z.string().min(1, "Group is required"),
-  imageUrl: z.string().url("Please enter a valid URL or leave the field empty.").or(z.literal('')).optional(),
+  imageUrl: z.string().url("A valid image URL is required for the profile picture.").or(z.literal('')).optional(),
   payments: z.array(paymentSchema).optional().default([]),
 });
 

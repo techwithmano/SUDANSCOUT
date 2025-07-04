@@ -19,9 +19,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { useTranslation } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { Label } from "../ui/label";
+import { ImageUpload } from "./ImageUpload";
+import { MultiImageUpload } from "./MultiImageUpload";
 
-// A more flexible schema for the form itself
 const postFormSchema = z.object({
   type: z.enum(['announcement', 'photo', 'video', 'album']),
   title: z.string().min(3, "Title is required"),
@@ -29,10 +30,10 @@ const postFormSchema = z.object({
   imageUrl: z.string().optional(),
   aiHint: z.string().optional(),
   videoUrl: z.string().optional(),
-  imageUrls: z.string().optional(), // Textarea for album URLs
+  imageUrls: z.array(z.string()).optional().default([]),
 }).superRefine((data, ctx) => {
-  if (data.type === 'photo' && !z.string().url().safeParse(data.imageUrl).success) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "A valid image URL is required", path: ['imageUrl'] });
+  if (data.type === 'photo' && !data.imageUrl) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "An image is required", path: ['imageUrl'] });
   }
   if (data.type === 'video') {
     const parsedUrl = z.string().url().safeParse(data.videoUrl);
@@ -40,8 +41,8 @@ const postFormSchema = z.object({
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: "A valid public Google Drive video URL is required.", path: ['videoUrl'] });
     }
   }
-  if (data.type === 'album' && (!data.imageUrls || data.imageUrls.trim().length === 0)) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please paste at least one image URL.", path: ['imageUrls'] });
+  if (data.type === 'album' && (!data.imageUrls || data.imageUrls.length === 0)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please upload at least one image.", path: ['imageUrls'] });
   }
 });
 
@@ -70,7 +71,7 @@ export function PostFormDialog({ isOpen, onClose, post }: PostFormDialogProps) {
       imageUrl: '',
       aiHint: '',
       videoUrl: '',
-      imageUrls: '',
+      imageUrls: [],
     },
   });
 
@@ -79,16 +80,15 @@ export function PostFormDialog({ isOpen, onClose, post }: PostFormDialogProps) {
   useEffect(() => {
     if (isOpen) {
       if (post) { // Editing existing post
-        if (post.type === 'album') {
-          form.reset({
-            type: 'album',
-            title: post.title,
-            content: post.content,
-            imageUrls: (post.images || []).map(img => img.url).join('\n'),
-          });
-        } else {
-          form.reset(post as any);
-        }
+        form.reset({
+          type: post.type,
+          title: post.title,
+          content: post.content,
+          imageUrl: post.type === 'photo' ? post.imageUrl : '',
+          aiHint: post.type === 'photo' ? post.aiHint : '',
+          videoUrl: post.type === 'video' ? post.videoUrl : '',
+          imageUrls: post.type === 'album' ? post.images.map(img => img.url) : [],
+        });
       } else { // Creating new post
         form.reset({
           type: 'announcement',
@@ -97,7 +97,7 @@ export function PostFormDialog({ isOpen, onClose, post }: PostFormDialogProps) {
           imageUrl: '',
           aiHint: '',
           videoUrl: '',
-          imageUrls: '',
+          imageUrls: [],
         });
       }
     }
@@ -121,13 +121,12 @@ export function PostFormDialog({ isOpen, onClose, post }: PostFormDialogProps) {
       } else if (data.type === 'video') {
         dataToSave.videoUrl = data.videoUrl;
       } else if (data.type === 'album') {
-        const urls = data.imageUrls!.split('\n').map(url => url.trim()).filter(Boolean);
-        if (urls.length === 0 || !urls.every(u => u.startsWith('http'))) {
-            toast({ variant: 'destructive', title: 'Invalid URLs', description: 'Please provide valid, full URLs for the album images, one per line.' });
+        if (!data.imageUrls || data.imageUrls.length === 0) {
+            toast({ variant: 'destructive', title: 'Invalid Album', description: 'Please upload at least one image for the album.' });
             setIsSubmitting(false);
             return;
         }
-        dataToSave.images = urls.map(url => ({ url, aiHint: 'scout photo' }));
+        dataToSave.images = data.imageUrls.map(url => ({ url, aiHint: 'scout photo' }));
       }
       
       const dbSchemaCheck = postSchema.safeParse(dataToSave);
@@ -217,7 +216,23 @@ export function PostFormDialog({ isOpen, onClose, post }: PostFormDialogProps) {
             
             {postType === 'photo' && (
               <>
-                <FormField control={form.control} name="imageUrl" render={({ field }) => (<FormItem><FormLabel>{t('admin.imageUrl')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                 <FormField
+                  control={form.control}
+                  name="imageUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>{t('admin.photoUpload')}</FormLabel>
+                        <FormControl>
+                            <ImageUpload
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                disabled={isSubmitting}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField control={form.control} name="aiHint" render={({ field }) => (<FormItem><FormLabel>{t('admin.aiHint')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
               </>
             )}
@@ -227,22 +242,26 @@ export function PostFormDialog({ isOpen, onClose, post }: PostFormDialogProps) {
             )}
 
             {postType === 'album' && (
-              <FormField control={form.control} name="imageUrls" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('admin.albumImages')}</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder={"Paste one image link per line..."}
-                      rows={8}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Upload your images to a site like Postimages.org and paste all the direct links here.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )} />
+              <FormField
+                control={form.control}
+                name="imageUrls"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin.albumImages')}</FormLabel>
+                    <FormControl>
+                        <MultiImageUpload
+                            value={field.value || []}
+                            onChange={field.onChange}
+                            disabled={isSubmitting}
+                        />
+                    </FormControl>
+                    <FormDescription>
+                      You can select multiple images to upload at once.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
 
             <DialogFooter className="pt-4">

@@ -20,6 +20,7 @@ import { useTranslation } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import translations from "@/locales";
+import { ImageUpload } from "./ImageUpload";
 
 type ScoutFormValues = z.infer<typeof scoutSchema>;
 
@@ -33,8 +34,6 @@ const groups = [
   'troopAdvancedGuides', 'troopGirlGuides', 'troopBrownies'
 ];
 
-// This map helps find the correct internal group key (e.g., 'troopBoyScouts')
-// from a display value in either English or Arabic (e.g., "Boy Scouts Troop" or "فرقة الفتيان").
 const buildGroupKeyMap = () => {
     const map: { [key: string]: string } = {};
     const allTranslations = [translations.en.about, translations.ar.about];
@@ -59,26 +58,20 @@ const getGroupKey = (groupValue: string | undefined): string => {
 };
 
 
-// This function cleans and prepares the scout data before it's put into the form.
-// It ensures that even if the data is old or malformed, the form gets what it expects.
 const normalizeScoutDataForForm = (scout: Scout): ScoutFormValues => {
-    // Ensure payments is an array and each payment has all required fields with correct types.
     const sanitizedPayments = (scout.payments || []).map(p => ({
         month: p.month || '',
         amount: p.amount === undefined || p.amount === null ? 0 : Number(p.amount),
         status: p.status === 'paid' || p.status === 'due' ? p.status : 'due' as 'paid' | 'due',
     }));
 
-    // Find the correct, language-independent key for the scout's group.
     const groupKey = getGroupKey(scout.group);
 
     return {
         ...scout,
-        group: groupKey, // Use the standardized key
+        group: groupKey,
         payments: sanitizedPayments,
-        // Don't show the placeholder URL in the form field.
-        imageUrl: scout.imageUrl === 'https://placehold.co/400x400.png' ? '' : scout.imageUrl || '',
-        // Ensure required fields are not undefined.
+        imageUrl: scout.imageUrl || '',
         id: scout.id || '',
         fullName: scout.fullName || '',
         dateOfBirth: scout.dateOfBirth || '',
@@ -96,7 +89,6 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
 
   const form = useForm<ScoutFormValues>({
     resolver: zodResolver(scoutSchema),
-    // Use the new normalizer function to safely prepare the data for the form.
     defaultValues: scout ? normalizeScoutDataForForm(scout) : {
       id: "",
       fullName: "",
@@ -218,11 +210,14 @@ export default function MemberForm({ scout, onSaveSuccess }: MemberFormProps) {
               name="imageUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('admin.profilePicUrl')}</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder={t('admin.profilePicUrlHint')} />
-                  </FormControl>
-                  <FormMessage />
+                    <FormControl>
+                        <ImageUpload
+                            value={field.value || ''}
+                            onChange={field.onChange}
+                            disabled={isSubmitting}
+                        />
+                    </FormControl>
+                    <FormMessage />
                 </FormItem>
               )}
             />

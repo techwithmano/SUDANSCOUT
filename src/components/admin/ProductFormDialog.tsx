@@ -19,6 +19,7 @@ import { db } from "@/lib/firebase";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "../ui/dialog";
 import { useTranslation } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
+import { ImageUpload } from "./ImageUpload";
 
 type ProductFormValues = z.infer<typeof productSchema>;
 
@@ -45,7 +46,7 @@ export function ProductFormDialog({ isOpen, onClose, product }: ProductFormDialo
       description_ar: '',
       price: '' as any,
       category: undefined,
-      imageUrl: 'https://placehold.co/400x300.png',
+      imageUrl: '',
       aiHint: 'product',
     },
   });
@@ -61,7 +62,7 @@ export function ProductFormDialog({ isOpen, onClose, product }: ProductFormDialo
         description_ar: '',
         price: '' as any,
         category: undefined,
-        imageUrl: 'https://placehold.co/400x300.png',
+        imageUrl: '',
         aiHint: 'product',
       });
     }
@@ -108,6 +109,25 @@ export function ProductFormDialog({ isOpen, onClose, product }: ProductFormDialo
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto p-1 pr-4">
+            
+            <FormField
+              control={form.control}
+              name="imageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('admin.productImage')}</FormLabel>
+                  <FormControl>
+                    <ImageUpload
+                      value={field.value || ''}
+                      onChange={field.onChange}
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
             <div className="grid md:grid-cols-2 gap-4">
               <FormField control={form.control} name="name_en" render={({ field }) => (<FormItem><FormLabel>{t('admin.nameEn')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
               <FormField control={form.control} name="name_ar" render={({ field }) => (<FormItem><FormLabel>{t('admin.nameAr')}</FormLabel><FormControl><Input dir="rtl" {...field} /></FormControl><FormMessage /></FormItem>)} />
@@ -130,7 +150,7 @@ export function ProductFormDialog({ isOpen, onClose, product }: ProductFormDialo
                 </FormItem>
                 )} />
             </div>
-            <FormField control={form.control} name="imageUrl" render={({ field }) => (<FormItem><FormLabel>{t('admin.imageUrl')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+            
             <FormField control={form.control} name="aiHint" render={({ field }) => (<FormItem><FormLabel>{t('admin.aiHint')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
 
             <DialogFooter className="pt-4">
