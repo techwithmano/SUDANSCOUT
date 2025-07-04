@@ -73,9 +73,9 @@ const AlbumGrid = ({ images, onOpen }: { images: { url: string; aiHint?: string 
             <Image
                 src={img.url}
                 alt={img.aiHint || `Album photo ${index + 1}`}
-                layout="fill"
-                objectFit="cover"
-                className="transition-transform duration-300 group-hover:scale-110"
+                fill
+                sizes="(max-width: 640px) 100vw, 50vw"
+                className="object-cover transition-transform duration-300 group-hover:scale-110"
             />
         </div>
     );
@@ -87,12 +87,12 @@ const AlbumGrid = ({ images, onOpen }: { images: { url: string; aiHint?: string 
     );
 
     if (photoCount === 1) {
-        return <div className="aspect-w-4 aspect-h-3">{renderImage(images[0], 0)}</div>;
+        return <div className="aspect-[4/3]">{renderImage(images[0], 0)}</div>;
     }
 
     if (photoCount === 2) {
         return (
-            <div className="grid grid-cols-2 gap-1 aspect-w-4 aspect-h-3">
+            <div className="grid grid-cols-2 gap-1 aspect-[4/3]">
                 {images.map((img, i) => renderImage(img, i))}
             </div>
         );
@@ -100,7 +100,7 @@ const AlbumGrid = ({ images, onOpen }: { images: { url: string; aiHint?: string 
     
     if (photoCount === 3) {
         return (
-            <div className="grid grid-cols-2 grid-rows-2 gap-1 aspect-w-4 aspect-h-3">
+            <div className="grid grid-cols-2 grid-rows-2 gap-1 aspect-[4/3]">
                 {renderImage(images[0], 0, "col-span-2 row-span-1")}
                 {renderImage(images[1], 1, "col-span-1 row-span-1")}
                 {renderImage(images[2], 2, "col-span-1 row-span-1")}
@@ -110,7 +110,7 @@ const AlbumGrid = ({ images, onOpen }: { images: { url: string; aiHint?: string 
     
     if (photoCount === 4) {
         return (
-            <div className="grid grid-cols-2 grid-rows-2 gap-1 aspect-w-4 aspect-h-3">
+            <div className="grid grid-cols-2 grid-rows-2 gap-1 aspect-[4/3]">
                 {images.map((img, i) => renderImage(img, i))}
             </div>
         );
@@ -118,7 +118,7 @@ const AlbumGrid = ({ images, onOpen }: { images: { url: string; aiHint?: string 
     
     // 5 or more photos
     return (
-        <div className="grid grid-cols-2 grid-rows-2 gap-1 aspect-w-4 aspect-h-3">
+        <div className="grid grid-cols-2 grid-rows-2 gap-1 aspect-[4/3]">
             {images.slice(0, 3).map((img, i) => renderImage(img, i))}
             <div className="relative">
                 {renderImage(images[3], 3)}
@@ -225,7 +225,7 @@ export default function ActivitiesView({ posts }: { posts: Post[] }) {
                                         {selectedAlbum.images.map((image: any, index: number) => (
                                             <CarouselItem key={index}>
                                                 <div className="relative h-[75vh]">
-                                                    <Image src={image.url} alt={image.aiHint || 'Album image'} layout="fill" objectFit="contain" />
+                                                    <Image src={image.url} alt={image.aiHint || 'Album image'} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-contain" />
                                                 </div>
                                             </CarouselItem>
                                         ))}
