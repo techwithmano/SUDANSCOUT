@@ -55,14 +55,6 @@ const PostHeader = ({ post, t, locale }: { post: any; t: any; locale: string }) 
   </div>
 );
 
-const getGoogleDriveEmbedUrl = (url: string): string | null => {
-    if (!url || !url.includes('drive.google.com')) return null;
-    const match = url.match(/file\/d\/([^/]+)/);
-    const fileId = match ? match[1] : null;
-    if (!fileId) return null;
-    return `https://drive.google.com/file/d/${fileId}/preview`;
-};
-
 const AlbumGrid = ({ images, onOpen }: { images: { url: string; aiHint?: string }[]; onOpen: () => void }) => {
     const photoCount = images.length;
 
@@ -130,7 +122,6 @@ const AlbumGrid = ({ images, onOpen }: { images: { url: string; aiHint?: string 
 
 
 const PostCard = ({ post, t, locale, onAlbumOpen }: { post: Post; t: any; locale: string; onAlbumOpen: (post: Post) => void }) => {
-  const embedUrl = post.type === 'video' ? getGoogleDriveEmbedUrl(post.videoUrl) : null;
   const isAnnouncement = post.type === 'announcement';
 
   return (
@@ -157,20 +148,11 @@ const PostCard = ({ post, t, locale, onAlbumOpen }: { post: Post; t: any; locale
 
       {post.type === 'video' && (
         <div className="aspect-video bg-black">
-          {embedUrl ? (
-            <iframe
-              src={embedUrl}
-              title={post.title}
-              frameBorder="0"
-              allow="autoplay; fullscreen"
-              allowFullScreen
-              className="w-full h-full"
-            ></iframe>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-white bg-gray-800">
-              <Film className="h-12 w-12" />
-            </div>
-          )}
+           <video
+              src={post.videoUrl}
+              controls
+              className="w-full h-full object-contain"
+            ></video>
         </div>
       )}
 

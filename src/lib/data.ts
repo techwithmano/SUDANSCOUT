@@ -68,7 +68,7 @@ const videoPostSchema = z.object({
   type: z.literal('video'),
   title: z.string().min(3, "Title is required"),
   content: z.string().min(10, "Content is required"),
-  videoUrl: z.string().url('A valid public Google Drive video URL is required'),
+  videoUrl: z.string().url('A valid video URL is required'),
   createdAt: z.any().optional(),
 });
 

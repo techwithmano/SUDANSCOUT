@@ -22,6 +22,7 @@ import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Label } from "../ui/label";
 import { ImageUpload } from "./ImageUpload";
 import { MultiImageUpload } from "./MultiImageUpload";
+import { VideoUpload } from "./VideoUpload";
 
 const postFormSchema = z.object({
   type: z.enum(['announcement', 'photo', 'video', 'album']),
@@ -35,11 +36,8 @@ const postFormSchema = z.object({
   if (data.type === 'photo' && !data.imageUrl) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "An image is required", path: ['imageUrl'] });
   }
-  if (data.type === 'video') {
-    const parsedUrl = z.string().url().safeParse(data.videoUrl);
-    if (!parsedUrl.success || !parsedUrl.data.includes('drive.google.com')) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "A valid public Google Drive video URL is required.", path: ['videoUrl'] });
-    }
+  if (data.type === 'video' && !data.videoUrl) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "A video file is required.", path: ['videoUrl'] });
   }
   if (data.type === 'album' && (!data.imageUrls || data.imageUrls.length === 0)) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please upload at least one image.", path: ['imageUrls'] });
@@ -238,7 +236,23 @@ export function PostFormDialog({ isOpen, onClose, post }: PostFormDialogProps) {
             )}
 
             {postType === 'video' && (
-              <FormField control={form.control} name="videoUrl" render={({ field }) => (<FormItem><FormLabel>{t('admin.videoUrl')}</FormLabel><FormControl><Input placeholder={t('admin.videoUrlPlaceholder')} {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField
+                control={form.control}
+                name="videoUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin.videoUpload')}</FormLabel>
+                    <FormControl>
+                      <VideoUpload
+                        value={field.value || ''}
+                        onChange={field.onChange}
+                        disabled={isSubmitting}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
 
             {postType === 'album' && (
