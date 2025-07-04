@@ -181,7 +181,7 @@ export default function ActivitiesView({ posts }: { posts: Post[] }) {
                                     <CarouselContent>
                                         {selectedAlbum.images.map((image: any, index: number) => (
                                             <CarouselItem key={index}>
-                                                <div className="relative aspect-square">
+                                                <div className="relative h-[75vh]">
                                                     <Image src={image.url} alt={image.aiHint || 'Album image'} layout="fill" objectFit="contain" />
                                                 </div>
                                             </CarouselItem>
