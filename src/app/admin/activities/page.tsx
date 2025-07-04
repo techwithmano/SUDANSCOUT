@@ -10,11 +10,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { collection, getDocs, query, deleteDoc, doc, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Post } from '@/lib/data';
-import { PlusCircle, Trash2, Loader2, Edit, Newspaper } from 'lucide-react';
-import Image from 'next/image';
+import { PlusCircle, Trash2, Loader2, Edit, Newspaper, Megaphone, Image as ImageIcon, Video, Images } from 'lucide-react';
 import { PostFormDialog } from '@/components/admin/PostFormDialog';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import { Badge } from '@/components/ui/badge';
+
+const PostTypeIcon = ({ type }: { type: Post['type']}) => {
+  switch (type) {
+    case 'announcement': return <Megaphone className="h-4 w-4" />;
+    case 'photo': return <ImageIcon className="h-4 w-4" />;
+    case 'video': return <Video className="h-4 w-4" />;
+    case 'album': return <Images className="h-4 w-4" />;
+    default: return null;
+  }
+}
 
 export default function AdminActivitiesPage() {
   const { t, locale } = useTranslation();
@@ -72,6 +82,8 @@ export default function AdminActivitiesPage() {
         return;
     }
 
+    if (!confirm(t('admin.confirmDeletePost'))) return;
+
     try {
         await deleteDoc(doc(db, 'posts', postId));
         toast({ title: t('admin.postDeletedSuccess') });
@@ -125,7 +137,8 @@ export default function AdminActivitiesPage() {
               <Table>
                   <TableHeader>
                       <TableRow>
-                          <TableHead className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>Title</TableHead>
+                          <TableHead className={cn(locale === 'ar' ? 'text-right' : 'text-left')}>{t('admin.postTitle')}</TableHead>
+                          <TableHead>{t('admin.postType')}</TableHead>
                           <TableHead>Created At</TableHead>
                           {canManage && <TableHead className={cn(locale === 'ar' ? 'text-left' : 'text-right')}>{t('memberProfile.action')}</TableHead>}
                       </TableRow>
@@ -135,6 +148,12 @@ export default function AdminActivitiesPage() {
                           <TableRow key={post.id}>
                               <TableCell className={cn("font-medium", locale === 'ar' ? 'text-right' : 'text-left')}>
                                 {post.title}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="secondary" className="gap-1.5">
+                                  <PostTypeIcon type={post.type} />
+                                  {t(`admin.type${post.type.charAt(0).toUpperCase() + post.type.slice(1)}`)}
+                                </Badge>
                               </TableCell>
                               <TableCell>{formatDate(post.createdAt as Timestamp)}</TableCell>
                               {canManage && (

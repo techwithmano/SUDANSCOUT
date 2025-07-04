@@ -42,13 +42,54 @@ export const scoutSchema = z.object({
   payments: z.array(paymentSchema).optional().default([]),
 });
 
-export const postSchema = z.object({
+// A more lenient schema for importing CSVs
+export const importScoutSchema = scoutSchema.extend({
+  address: z.string(), // Override address to allow empty strings during import
+});
+
+const announcementPostSchema = z.object({
+  type: z.literal('announcement'),
   title: z.string().min(3, "Title is required"),
   content: z.string().min(10, "Content is required"),
-  imageUrl: z.string().url('A valid image URL is required').default('https://placehold.co/600x400.png'),
-  aiHint: z.string().optional().default('scouts event'),
-  createdAt: z.any(),
+  createdAt: z.any().optional(),
 });
+
+const photoPostSchema = z.object({
+  type: z.literal('photo'),
+  title: z.string().min(3, "Title is required"),
+  content: z.string().min(10, "Content is required"),
+  imageUrl: z.string().url('A valid image URL is required'),
+  aiHint: z.string().optional().default('scouts event'),
+  createdAt: z.any().optional(),
+});
+
+const videoPostSchema = z.object({
+  type: z.literal('video'),
+  title: z.string().min(3, "Title is required"),
+  content: z.string().min(10, "Content is required"),
+  videoUrl: z.string().url('A valid YouTube embed URL is required'),
+  createdAt: z.any().optional(),
+});
+
+const imageInAlbumSchema = z.object({
+  url: z.string().url('A valid image URL is required'),
+  aiHint: z.string().optional().default('scout photo'),
+});
+
+const albumPostSchema = z.object({
+  type: z.literal('album'),
+  title: z.string().min(3, "Title is required"),
+  content: z.string().min(10, "Content is required"),
+  images: z.array(imageInAlbumSchema).min(1, 'An album must have at least one image.'),
+  createdAt: z.any().optional(),
+});
+
+export const postSchema = z.discriminatedUnion("type", [
+  announcementPostSchema,
+  photoPostSchema,
+  videoPostSchema,
+  albumPostSchema
+]);
 
 export type Payment = z.infer<typeof paymentSchema>;
 export type Scout = z.infer<typeof scoutSchema>;
