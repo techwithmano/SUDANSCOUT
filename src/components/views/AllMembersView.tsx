@@ -20,6 +20,7 @@ import Papa from 'papaparse';
 import { cn } from "@/lib/utils";
 import translations from "@/locales";
 import { z } from "zod";
+import { ConfirmationDialog } from "../admin/ConfirmationDialog";
 
 // This map helps find the correct internal group key (e.g., 'troopBoyScouts')
 // from a display value in either English or Arabic (e.g., "Boy Scouts Troop" or "فرقة الفتيان").
@@ -64,6 +65,8 @@ export default function AllMembersView() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingScout, setEditingScout] = useState<Scout | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [scoutToDelete, setScoutToDelete] = useState<Scout | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -108,15 +111,22 @@ export default function AllMembersView() {
     }
   }
 
-  const handleDelete = async (scout: Scout) => {
+  const handleDelete = (scout: Scout) => {
+    setScoutToDelete(scout);
+    setIsConfirmOpen(true);
+  };
+  
+  const executeDelete = async () => {
+    if (!scoutToDelete) return;
+
     if (!canManageMembers) {
         toast({ variant: "destructive", title: t('admin.permissionDenied'), description: t('admin.permissionDeniedDesc') });
         return;
     }
 
     try {
-        await deleteDoc(doc(db, 'scouts', scout.id));
-        toast({ title: t('admin.updateSuccess'), description: t('admin.deleteSuccessDesc', { name: scout.fullName }) });
+        await deleteDoc(doc(db, 'scouts', scoutToDelete.id));
+        toast({ title: t('admin.updateSuccess'), description: t('admin.deleteSuccessDesc', { name: scoutToDelete.fullName }) });
         fetchScouts();
     } catch (error) {
         console.error("Firestore Delete Error:", error);
@@ -350,6 +360,13 @@ export default function AllMembersView() {
 
   return (
     <>
+      <ConfirmationDialog
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={executeDelete}
+        title={t('admin.confirmDeleteMemberTitle')}
+        description={t('admin.confirmDeleteMemberDesc', { name: scoutToDelete?.fullName || '' })}
+      />
       <MemberFormDialog 
         isOpen={isDialogOpen} 
         onClose={handleDialogClose}

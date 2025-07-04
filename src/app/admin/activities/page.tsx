@@ -15,6 +15,7 @@ import { PostFormDialog } from '@/components/admin/PostFormDialog';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { Badge } from '@/components/ui/badge';
+import { ConfirmationDialog } from '@/components/admin/ConfirmationDialog';
 
 const PostTypeIcon = ({ type }: { type: Post['type']}) => {
   switch (type) {
@@ -34,6 +35,8 @@ export default function AdminActivitiesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
   const canManage = role === 'general' || role === 'media';
 
@@ -76,16 +79,20 @@ export default function AdminActivitiesPage() {
     }
   };
   
-  const handleDelete = async (postId: string) => {
+  const handleDelete = (postId: string) => {
     if (!canManage) {
         toast({ variant: "destructive", title: t('admin.deletePermissionError'), description: t('admin.deletePermissionErrorDesc') });
         return;
     }
-
-    if (!confirm(t('admin.confirmDeletePost'))) return;
+    setPostToDelete(postId);
+    setIsConfirmOpen(true);
+  };
+  
+  const executeDelete = async () => {
+    if (!postToDelete) return;
 
     try {
-        await deleteDoc(doc(db, 'posts', postId));
+        await deleteDoc(doc(db, 'posts', postToDelete));
         toast({ title: t('admin.postDeletedSuccess') });
         await fetchPosts();
     } catch (error) {
@@ -95,6 +102,7 @@ export default function AdminActivitiesPage() {
     }
   };
 
+
   const formatDate = (timestamp: Timestamp) => {
     if (!timestamp) return 'N/A';
     return timestamp.toDate().toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-US');
@@ -102,6 +110,13 @@ export default function AdminActivitiesPage() {
 
   return (
     <>
+      <ConfirmationDialog
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={executeDelete}
+        title={t('admin.confirmDeletePostTitle')}
+        description={t('admin.confirmDeletePostDesc')}
+      />
       <PostFormDialog 
         isOpen={isDialogOpen}
         onClose={handleDialogClose}

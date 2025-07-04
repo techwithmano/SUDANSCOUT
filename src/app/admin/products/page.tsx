@@ -15,6 +15,7 @@ import Image from 'next/image';
 import { ProductFormDialog } from '@/components/admin/ProductFormDialog';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import { ConfirmationDialog } from '@/components/admin/ConfirmationDialog';
 
 export default function AdminProductsPage() {
   const { t, locale } = useTranslation();
@@ -24,6 +25,8 @@ export default function AdminProductsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
   const canManage = role === 'general' || role === 'finance' || role === 'custodian';
 
@@ -66,14 +69,19 @@ export default function AdminProductsPage() {
     }
   };
   
-  const handleDelete = async (productId: string) => {
+  const handleDelete = (productId: string) => {
+    setProductToDelete(productId);
+    setIsConfirmOpen(true);
+  };
+
+  const executeDelete = async () => {
+    if (!productToDelete) return;
     if (!canManage) {
         toast({ variant: "destructive", title: t('admin.deletePermissionError'), description: t('admin.deletePermissionErrorDesc') });
         return;
     }
-
     try {
-        await deleteDoc(doc(db, 'products', productId));
+        await deleteDoc(doc(db, 'products', productToDelete));
         toast({ title: t('admin.productDeletedSuccess') });
         await fetchProducts(); // Refetch products
     } catch (error) {
@@ -85,6 +93,13 @@ export default function AdminProductsPage() {
 
   return (
     <>
+      <ConfirmationDialog
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={executeDelete}
+        title={t('admin.confirmDeleteProductTitle')}
+        description={t('admin.confirmDeleteProductDesc')}
+      />
       <ProductFormDialog 
         isOpen={isDialogOpen}
         onClose={handleDialogClose}

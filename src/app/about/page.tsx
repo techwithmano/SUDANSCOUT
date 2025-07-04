@@ -141,6 +141,7 @@ const leadership = {
       ],
       assistants: [
         { id: ++personId, name: 'بسملة ايهاب', role: 'roleFemaleTroopAssistant', imageUrl: '/18.png', dataAiHint: 'portrait woman young' },
+        { id: ++personId, name: 'رهف مهدي ميرغني', role: 'roleFemaleTroopAssistant', imageUrl: '/19.png', dataAiHint: 'portrait woman young' },
       ],
     },
   ],
