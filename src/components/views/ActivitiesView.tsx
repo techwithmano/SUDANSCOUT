@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,17 +10,35 @@ import { useTranslation } from '@/context/LanguageContext';
 import type { Post } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { Film, Images } from 'lucide-react';
+import { Film, Images, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const formatDate = (isoString: any, locale: string, t: (key: string, params?: any) => string) => {
-  if (!isoString?.toDate) return 'Date not available';
-  const date = isoString.toDate();
+const formatDate = (dateValue: any, locale: string, t: (key: string, params?: any) => string) => {
+  if (!dateValue) return t('activities.dateUnavailable');
+  
+  let date;
+  // Handle ISO strings from server components & client-side fetches
+  if (typeof dateValue === 'string') {
+    date = new Date(dateValue);
+  } else if (dateValue.toDate) { // Handle Firestore Timestamps from older components if any
+    date = dateValue.toDate();
+  } else {
+    return t('activities.dateUnavailable');
+  }
+
+  // Check if the date is valid after creation
+  if (isNaN(date.getTime())) {
+    return t('activities.dateUnavailable');
+  }
+  
   return date.toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   });
 };
+
 
 const PostHeader = ({ post, t, locale }: { post: any; t: any; locale: string }) => (
   <div className="flex items-center gap-3 p-4">
@@ -168,6 +186,29 @@ const PostCard = ({ post, t, locale, onAlbumOpen }: { post: Post; t: any; locale
 export default function ActivitiesView({ posts }: { posts: Post[] }) {
     const { t, locale } = useTranslation();
     const [selectedAlbum, setSelectedAlbum] = useState<any | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [sortOrder, setSortOrder] = useState('newest'); // 'newest' or 'oldest'
+
+    const filteredAndSortedPosts = useMemo(() => {
+        return posts
+            .filter(post => {
+                if (!searchQuery) return true;
+                const query = searchQuery.toLowerCase();
+                const titleMatch = post.title.toLowerCase().includes(query);
+                const contentMatch = post.content.toLowerCase().includes(query);
+                return titleMatch || contentMatch;
+            })
+            .sort((a, b) => {
+                const dateA = new Date(a.createdAt as string).getTime();
+                const dateB = new Date(b.createdAt as string).getTime();
+
+                if (sortOrder === 'newest') {
+                    return dateB - dateA;
+                } else {
+                    return dateA - dateB;
+                }
+            });
+    }, [posts, searchQuery, sortOrder]);
 
     return (
         <>
@@ -206,9 +247,31 @@ export default function ActivitiesView({ posts }: { posts: Post[] }) {
                     </p>
                 </div>
 
-                {posts.length > 0 ? (
-                    <div className="mt-12 max-w-2xl mx-auto space-y-8">
-                        {posts.map(post => (
+                <div className="mt-8 mb-12 max-w-2xl mx-auto flex flex-col sm:flex-row gap-4">
+                    <div className="relative flex-grow">
+                        <Search className={cn("absolute top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground", locale === 'ar' ? 'right-3' : 'left-3')} />
+                        <Input
+                            type="text"
+                            placeholder={t('activities.searchPlaceholder')}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className={cn(locale === 'ar' ? 'pr-10' : 'pl-10', "w-full")}
+                        />
+                    </div>
+                    <Select value={sortOrder} onValueChange={setSortOrder}>
+                        <SelectTrigger className="w-full sm:w-[180px]">
+                            <SelectValue placeholder={t('activities.sortBy')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="newest">{t('activities.sortNewest')}</SelectItem>
+                            <SelectItem value="oldest">{t('activities.sortOldest')}</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {filteredAndSortedPosts.length > 0 ? (
+                    <div className="max-w-2xl mx-auto space-y-8">
+                        {filteredAndSortedPosts.map(post => (
                            <PostCard 
                                 key={post.id}
                                 post={post}
@@ -220,7 +283,7 @@ export default function ActivitiesView({ posts }: { posts: Post[] }) {
                     </div>
                 ) : (
                     <div className="mt-16 text-center text-muted-foreground">
-                        <p>{t('activities.noPosts')}</p>
+                        <p>{searchQuery ? t('activities.noResults') : t('activities.noPosts')}</p>
                     </div>
                 )}
             </div>

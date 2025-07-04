@@ -88,6 +88,12 @@ export default {
     postedOn: 'نُشر في {date}',
     viewAlbum: 'عرض الألبوم',
     photoCount: '{count} صور',
+    searchPlaceholder: 'ابحث بالعنوان أو المحتوى...',
+    sortBy: 'فرز حسب...',
+    sortNewest: 'الأحدث أولاً',
+    sortOldest: 'الأقدم أولاً',
+    noResults: 'لم يتم العثور على منشورات تطابق بحثك.',
+    dateUnavailable: 'التاريخ غير متوفر',
   },
   // Contact Page
   contact: {

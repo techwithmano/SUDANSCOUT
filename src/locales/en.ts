@@ -88,6 +88,12 @@ export default {
     postedOn: 'Posted on {date}',
     viewAlbum: 'View Album',
     photoCount: '{count} photos',
+    searchPlaceholder: 'Search by title or content...',
+    sortBy: 'Sort by...',
+    sortNewest: 'Newest first',
+    sortOldest: 'Oldest first',
+    noResults: 'No posts found matching your search.',
+    dateUnavailable: 'Date not available',
   },
   // Contact Page
   contact: {
