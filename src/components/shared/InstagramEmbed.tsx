@@ -16,30 +16,30 @@ declare global {
 const InstagramEmbed = ({ url }: { url: string }) => {
   useEffect(() => {
     const scriptId = 'instagram-embed-script';
-    let script = document.getElementById(scriptId) as HTMLScriptElement;
 
     const processInstgrm = () => {
-      if (window.instgrm) {
+      if (window.instgrm && typeof window.instgrm.Embeds?.process === 'function') {
         window.instgrm.Embeds.process();
       }
     };
 
-    if (!script) {
-      script = document.createElement('script');
-      script.id = scriptId;
-      script.src = 'https://www.instagram.com/embed.js';
-      script.async = true;
-      script.onload = processInstgrm;
-      document.body.appendChild(script);
-    } else {
-        processInstgrm();
+    if (document.getElementById(scriptId)) {
+      processInstgrm();
+      return;
     }
-    
+
+    const script = document.createElement('script');
+    script.id = scriptId;
+    script.src = 'https://www.instagram.com/embed.js';
+    script.async = true;
+    script.defer = true;
+    script.onload = processInstgrm;
+    document.body.appendChild(script);
+
   }, [url]);
 
-  // The key forces a re-render of the blockquote, which is necessary for the script to re-process it.
   return (
-    <div key={url} className="w-full h-full flex items-center justify-center bg-black overflow-hidden">
+    <div className="w-full h-full flex items-center justify-center bg-black overflow-hidden">
         <blockquote
             className="instagram-media"
             data-instgrm-permalink={url}

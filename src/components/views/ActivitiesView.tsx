@@ -79,13 +79,14 @@ const VideoCard = ({ post, t, locale }: { post: any, t: any, locale: string }) =
   };
 
   const videoId = !isInstagram ? getYouTubeId(post.videoUrl) : null;
+  const wrapperClass = isInstagram ? "bg-black" : "aspect-w-16 aspect-h-9 bg-black";
 
   return (
     <Card className="flex flex-col overflow-hidden shadow-lg group">
       <CardHeader className="p-0 relative">
-        <div className="aspect-w-16 aspect-h-9 bg-black">
+        <div className={wrapperClass}>
           {isInstagram ? (
-            <InstagramEmbed url={post.videoUrl} />
+            <InstagramEmbed key={post.videoUrl} url={post.videoUrl} />
           ) : videoId ? (
             <iframe
               src={`https://www.youtube.com/embed/${videoId}`}
