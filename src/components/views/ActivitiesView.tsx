@@ -4,12 +4,12 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { useTranslation } from '@/context/LanguageContext';
 import type { Post } from '@/lib/data';
 import { Megaphone, Film, Images } from 'lucide-react';
+import InstagramEmbed from '@/components/shared/InstagramEmbed';
 
 const formatDate = (isoString: any, locale: string, t: (key: string, params?: any) => string) => {
   if (!isoString?.toDate) return 'Date not available';
@@ -69,24 +69,24 @@ const PhotoCard = ({ post, t, locale }: { post: any, t: any, locale: string }) =
 );
 
 const VideoCard = ({ post, t, locale }: { post: any, t: any, locale: string }) => {
+  const isInstagram = post.videoUrl && post.videoUrl.includes('instagram.com');
+  
   const getYouTubeId = (url: string) => {
-    try {
-      const urlObj = new URL(url);
-      if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
-        const pathParts = urlObj.pathname.split('/');
-        return pathParts[pathParts.length - 1];
-      }
-    } catch (e) { console.error(e) }
-    return null;
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
   };
 
-  const videoId = getYouTubeId(post.videoUrl);
+  const videoId = !isInstagram ? getYouTubeId(post.videoUrl) : null;
 
   return (
     <Card className="flex flex-col overflow-hidden shadow-lg group">
       <CardHeader className="p-0 relative">
         <div className="aspect-w-16 aspect-h-9 bg-black">
-          {videoId ? (
+          {isInstagram ? (
+            <InstagramEmbed url={post.videoUrl} />
+          ) : videoId ? (
             <iframe
               src={`https://www.youtube.com/embed/${videoId}`}
               title={post.title}

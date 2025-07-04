@@ -34,8 +34,11 @@ const postFormSchema = z.object({
   if (data.type === 'photo' && !z.string().url().safeParse(data.imageUrl).success) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "A valid image URL is required", path: ['imageUrl'] });
   }
-  if (data.type === 'video' && !z.string().url().safeParse(data.videoUrl).success) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "A valid YouTube embed URL is required", path: ['videoUrl'] });
+  if (data.type === 'video') {
+    const parsedUrl = z.string().url().safeParse(data.videoUrl);
+    if (!parsedUrl.success || !(parsedUrl.data.includes('youtube.com') || parsedUrl.data.includes('youtu.be') || parsedUrl.data.includes('instagram.com'))) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "A valid video URL from YouTube or Instagram is required.", path: ['videoUrl'] });
+    }
   }
   if (data.type === 'album' && (!data.imageUrls || data.imageUrls.trim().length === 0)) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please paste at least one image URL.", path: ['imageUrls'] });
