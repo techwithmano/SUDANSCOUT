@@ -3,12 +3,14 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { useTranslation } from '@/context/LanguageContext';
 import type { Post } from '@/lib/data';
-import { Megaphone, Film, Images } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
+import { Film, Images } from 'lucide-react';
 
 const formatDate = (isoString: any, locale: string, t: (key: string, params?: any) => string) => {
   if (!isoString?.toDate) return 'Date not available';
@@ -20,67 +22,122 @@ const formatDate = (isoString: any, locale: string, t: (key: string, params?: an
   });
 };
 
-const AnnouncementCard = ({ post, t, locale }: { post: any, t: any, locale: string }) => (
-  <Card className="flex flex-col shadow-lg bg-secondary">
-    <CardHeader>
-      <div className="flex items-center gap-3">
-        <div className="p-3 bg-primary/10 rounded-full">
-          <Megaphone className="h-6 w-6 text-primary" />
-        </div>
-        <CardTitle className="font-headline text-xl">{post.title}</CardTitle>
-      </div>
-    </CardHeader>
-    <CardContent className="flex-grow">
-      <p className="text-muted-foreground">{post.content}</p>
-    </CardContent>
-    <CardFooter>
-      <p className="text-sm text-muted-foreground">
+const PostHeader = ({ post, t, locale }: { post: any; t: any; locale: string }) => (
+  <div className="flex items-center gap-3 p-4">
+    <Avatar>
+      <AvatarImage src="/logo.png" alt="Scout Logo" />
+      <AvatarFallback>SSG</AvatarFallback>
+    </Avatar>
+    <div>
+      <p className="font-semibold font-headline text-primary">Sudan Scouts and Guides in Kuwait</p>
+      <p className="text-xs text-muted-foreground">
         {t('activities.postedOn', { date: formatDate(post.createdAt, locale, t) })}
       </p>
-    </CardFooter>
-  </Card>
+    </div>
+  </div>
 );
 
-const PhotoCard = ({ post, t, locale }: { post: any, t: any, locale: string }) => (
-  <Card className="flex flex-col overflow-hidden shadow-lg group">
-    <CardHeader className="p-0 relative">
-      <div className="aspect-w-4 aspect-h-3">
-        <Image
-          src={post.imageUrl}
-          alt={post.title}
-          width={600}
-          height={400}
-          className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-110"
-          data-ai-hint={post.aiHint}
-        />
-      </div>
-    </CardHeader>
-    <CardContent className="p-6 flex-grow">
-      <CardTitle className="font-headline text-2xl">{post.title}</CardTitle>
-      <CardDescription className="mt-2 text-muted-foreground line-clamp-3">{post.content}</CardDescription>
-    </CardContent>
-    <CardFooter className="p-6 pt-0">
-      <p className="text-sm text-muted-foreground">
-        {t('activities.postedOn', { date: formatDate(post.createdAt, locale, t) })}
-      </p>
-    </CardFooter>
-  </Card>
-);
-
-const VideoCard = ({ post, t, locale }: { post: any, t: any, locale: string }) => {
-  const getGoogleDriveEmbedUrl = (url: string): string | null => {
+const getGoogleDriveEmbedUrl = (url: string): string | null => {
     if (!url || !url.includes('drive.google.com')) return null;
     const match = url.match(/file\/d\/([^/]+)/);
     const fileId = match ? match[1] : null;
     if (!fileId) return null;
     return `https://drive.google.com/file/d/${fileId}/preview`;
-  };
+};
 
-  const embedUrl = getGoogleDriveEmbedUrl(post.videoUrl);
+const AlbumGrid = ({ images, onOpen }: { images: { url: string; aiHint?: string }[]; onOpen: () => void }) => {
+    const photoCount = images.length;
+
+    if (photoCount === 0) return null;
+
+    const renderImage = (img: { url: string; aiHint?: string }, index: number, className = "") => (
+        <div key={index} className={cn("relative cursor-pointer group overflow-hidden bg-secondary", className)} onClick={onOpen}>
+            <Image
+                src={img.url}
+                alt={img.aiHint || `Album photo ${index + 1}`}
+                layout="fill"
+                objectFit="cover"
+                className="transition-transform duration-300 group-hover:scale-110"
+            />
+        </div>
+    );
+    
+    const renderOverlay = (count: number) => (
+       <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-2xl font-bold cursor-pointer" onClick={onOpen}>
+           +{count}
+       </div>
+    );
+
+    if (photoCount === 1) {
+        return <div className="aspect-w-4 aspect-h-3">{renderImage(images[0], 0)}</div>;
+    }
+
+    if (photoCount === 2) {
+        return (
+            <div className="grid grid-cols-2 gap-1 aspect-w-4 aspect-h-3">
+                {images.map((img, i) => renderImage(img, i))}
+            </div>
+        );
+    }
+    
+    if (photoCount === 3) {
+        return (
+            <div className="grid grid-cols-2 grid-rows-2 gap-1 aspect-w-4 aspect-h-3">
+                {renderImage(images[0], 0, "col-span-2 row-span-1")}
+                {renderImage(images[1], 1, "col-span-1 row-span-1")}
+                {renderImage(images[2], 2, "col-span-1 row-span-1")}
+            </div>
+        );
+    }
+    
+    if (photoCount === 4) {
+        return (
+            <div className="grid grid-cols-2 grid-rows-2 gap-1 aspect-w-4 aspect-h-3">
+                {images.map((img, i) => renderImage(img, i))}
+            </div>
+        );
+    }
+    
+    // 5 or more photos
+    return (
+        <div className="grid grid-cols-2 grid-rows-2 gap-1 aspect-w-4 aspect-h-3">
+            {images.slice(0, 3).map((img, i) => renderImage(img, i))}
+            <div className="relative">
+                {renderImage(images[3], 3)}
+                {renderOverlay(photoCount - 4)}
+            </div>
+        </div>
+    );
+};
+
+
+const PostCard = ({ post, t, locale, onAlbumOpen }: { post: Post; t: any; locale: string; onAlbumOpen: (post: Post) => void }) => {
+  const embedUrl = post.type === 'video' ? getGoogleDriveEmbedUrl(post.videoUrl) : null;
+  const isAnnouncement = post.type === 'announcement';
 
   return (
-    <Card className="flex flex-col overflow-hidden shadow-lg group">
-      <CardHeader className="p-0 relative">
+    <Card className="shadow-md overflow-hidden">
+      <PostHeader post={post} t={t} locale={locale} />
+      
+      <div className={cn("px-4 pb-4", isAnnouncement && "bg-secondary/50")}>
+        <h2 className={cn("text-xl font-semibold mb-2", isAnnouncement && "text-primary")}>{post.title}</h2>
+        <p className="text-muted-foreground whitespace-pre-wrap">{post.content}</p>
+      </div>
+
+      {post.type === 'photo' && (
+        <div className="w-full bg-secondary">
+          <Image
+            src={post.imageUrl}
+            alt={post.title}
+            width={700}
+            height={500}
+            className="w-full h-auto object-contain max-h-[70vh]"
+            data-ai-hint={post.aiHint}
+          />
+        </div>
+      )}
+
+      {post.type === 'video' && (
         <div className="aspect-video bg-black">
           {embedUrl ? (
             <iframe
@@ -97,71 +154,20 @@ const VideoCard = ({ post, t, locale }: { post: any, t: any, locale: string }) =
             </div>
           )}
         </div>
-      </CardHeader>
-      <CardContent className="p-6 flex-grow">
-        <CardTitle className="font-headline text-2xl">{post.title}</CardTitle>
-        <CardDescription className="mt-2 text-muted-foreground line-clamp-3">{post.content}</CardDescription>
-      </CardContent>
-      <CardFooter className="p-6 pt-0">
-        <p className="text-sm text-muted-foreground">
-          {t('activities.postedOn', { date: formatDate(post.createdAt, locale, t) })}
-        </p>
-      </CardFooter>
+      )}
+
+      {post.type === 'album' && (
+        <div className="pt-0">
+          <AlbumGrid images={post.images} onOpen={() => onAlbumOpen(post)} />
+        </div>
+      )}
     </Card>
   );
 };
 
-const AlbumCard = ({ post, onOpen, t, locale }: { post: any, onOpen: (post: any) => void, t: any, locale: string }) => (
-  <Card className="flex flex-col overflow-hidden shadow-lg group cursor-pointer" onClick={() => onOpen(post)}>
-    <CardHeader className="p-0 relative">
-      <div className="aspect-w-4 aspect-h-3">
-        <Image
-          src={post.images[0].url}
-          alt={post.title}
-          width={600}
-          height={400}
-          className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-110"
-          data-ai-hint={post.images[0].aiHint}
-        />
-        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="text-center text-white p-4 rounded-lg">
-            <Images className="h-12 w-12 mx-auto" />
-            <p className="font-semibold mt-2">{t('activities.viewAlbum')}</p>
-            <p className="text-sm">{t('activities.photoCount', { count: post.images.length })}</p>
-          </div>
-        </div>
-      </div>
-    </CardHeader>
-    <CardContent className="p-6 flex-grow">
-      <CardTitle className="font-headline text-2xl">{post.title}</CardTitle>
-      <CardDescription className="mt-2 text-muted-foreground line-clamp-3">{post.content}</CardDescription>
-    </CardContent>
-    <CardFooter className="p-6 pt-0">
-      <p className="text-sm text-muted-foreground">
-        {t('activities.postedOn', { date: formatDate(post.createdAt, locale, t) })}
-      </p>
-    </CardFooter>
-  </Card>
-);
-
 export default function ActivitiesView({ posts }: { posts: Post[] }) {
     const { t, locale } = useTranslation();
     const [selectedAlbum, setSelectedAlbum] = useState<any | null>(null);
-
-    const renderPostCard = (post: Post) => {
-      switch (post.type) {
-        case 'announcement':
-          return <AnnouncementCard key={post.id} post={post} t={t} locale={locale} />;
-        case 'photo':
-          return <PhotoCard key={post.id} post={post} t={t} locale={locale} />;
-        case 'video':
-          return <VideoCard key={post.id} post={post} t={t} locale={locale} />;
-        case 'album':
-          return <AlbumCard key={post.id} post={post} onOpen={setSelectedAlbum} t={t} locale={locale} />;
-        default:
-          return null;
-      }
-    };
 
     return (
         <>
@@ -201,8 +207,16 @@ export default function ActivitiesView({ posts }: { posts: Post[] }) {
                 </div>
 
                 {posts.length > 0 ? (
-                    <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
-                        {posts.map(renderPostCard)}
+                    <div className="mt-12 max-w-2xl mx-auto space-y-8">
+                        {posts.map(post => (
+                           <PostCard 
+                                key={post.id}
+                                post={post}
+                                t={t}
+                                locale={locale}
+                                onAlbumOpen={setSelectedAlbum}
+                           />
+                        ))}
                     </div>
                 ) : (
                     <div className="mt-16 text-center text-muted-foreground">
