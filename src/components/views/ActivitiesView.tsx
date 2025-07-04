@@ -79,7 +79,7 @@ const AlbumGrid = ({ images, onOpen }: { images: { url: string; aiHint?: string 
     );
 
     if (photoCount === 1) {
-        return <div className="aspect-[4/3]">{renderImage(images[0], 0)}</div>;
+        return renderImage(images[0], 0, "aspect-[4/3]");
     }
 
     if (photoCount === 2) {
@@ -130,7 +130,7 @@ const PostCard = ({ post, t, locale, onAlbumOpen }: { post: Post; t: any; locale
       
       <div className={cn("px-4 pb-4", isAnnouncement && "bg-secondary/50")}>
         <h2 className={cn("text-xl font-semibold mb-2", isAnnouncement && "text-primary")}>{post.title}</h2>
-        <p className="text-muted-foreground whitespace-pre-wrap">{post.content}</p>
+        <p className="text-muted-foreground whitespace-pre-wrap break-words">{post.content}</p>
       </div>
 
       {post.type === 'photo' && (
@@ -156,7 +156,7 @@ const PostCard = ({ post, t, locale, onAlbumOpen }: { post: Post; t: any; locale
         </div>
       )}
 
-      {post.type === 'album' && (
+      {post.type === 'album' && post.images.length > 0 && (
         <div className="pt-0">
           <AlbumGrid images={post.images} onOpen={() => onAlbumOpen(post)} />
         </div>
