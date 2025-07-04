@@ -81,13 +81,13 @@ const VideoCard = ({ post, t, locale }: { post: any, t: any, locale: string }) =
   return (
     <Card className="flex flex-col overflow-hidden shadow-lg group">
       <CardHeader className="p-0 relative">
-        <div className="aspect-w-16 aspect-h-9 bg-black">
+        <div className="aspect-video bg-black">
           {embedUrl ? (
             <iframe
               src={embedUrl}
               title={post.title}
               frameBorder="0"
-              allow="autoplay"
+              allow="autoplay; fullscreen"
               allowFullScreen
               className="w-full h-full"
             ></iframe>
