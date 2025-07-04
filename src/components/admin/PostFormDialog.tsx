@@ -19,6 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { useTranslation } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 type PostFormValues = z.infer<typeof postSchema>;
 
